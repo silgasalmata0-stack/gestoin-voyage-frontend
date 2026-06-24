@@ -31,6 +31,12 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
@@ -60,7 +66,8 @@
               "buildTarget": "gestion-voyage-frontend:build:production"
             },
             "development": {
-              "buildTarget": "gestion-voyage-frontend:build:development"
+              "buildTarget": "gestion-voyage-frontend:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

@@ -1,0 +1,18 @@
+{
+  "/api": {
+    "target": "https://gestionvoyage.onrender.com",
+    "secure": false,
+    "changeOrigin": true,
+    "headers": {
+      "Origin": "https://gestionvoyage.onrender.com"
+    }
+  },
+  "/actuator": {
+    "target": "https://gestionvoyage.onrender.com",
+    "secure": false,
+    "changeOrigin": true,
+    "headers": {
+      "Origin": "https://gestionvoyage.onrender.com"
+    }
+  }
+}

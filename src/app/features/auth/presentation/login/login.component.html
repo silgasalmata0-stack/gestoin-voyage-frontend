@@ -1,0 +1,110 @@
+<div class="login-page">
+
+  <section class="left-panel" aria-hidden="true">
+    <div class="left-top">
+      <div class="logo-area">
+        <div class="logo-box">
+          <img src="assets/images/ujkz.png" alt="Logo UJKZ" class="univ-logo" />
+        </div>
+        <div class="univ-label">
+          <span>UNIVERSITÉ JOSEPH KI-ZERBO</span>
+          <span>BURKINA FASO</span>
+        </div>
+      </div>
+    </div>
+
+ <div class="left-body">
+  <h1 class="hero-title">
+    Portail de Gestion<br>
+    des <em class="gold">Mobilités</em><br>
+    Universitaires
+  </h1>
+</div>
+
+    <div class="left-bottom">
+      
+      <p class="system-log">
+        Accès restreint au personnel autorisé et aux étudiants
+        inscrits aux programmes de mobilité internationale.
+      </p>
+    </div>
+  </section>
+
+  <section class="right-panel">
+    <div class="form-wrapper">
+
+      <h2 class="form-title">Connectez-vous à votre compte</h2>
+      <p class="form-subtitle">Entrez vos identifiants académiques pour continuer.</p>
+
+      @if (wakingUp()) {
+        <div class="alert alert--waking">
+          <span class="pulse-dot"></span>
+          Le serveur se réveille, patientez quelques secondes…
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="alert alert--error">{{ errorMessage() }}</div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <div class="field-group" [class.field-group--error]="email.invalid && email.touched">
+          <div class="field-header">
+            <label class="field-label" for="email">IDENTIFIANT</label>
+            @if (email.invalid && email.touched) {
+              <span class="badge badge--error">REQUIS</span>
+            } @else {
+              <span class="badge">REQUIRED</span>
+            }
+          </div>
+          <div class="field-row">
+            <span class="field-prefix">ID.</span>
+            <input id="email" type="email" class="field-input"
+              placeholder="nom.prenom@universite.edu"
+              formControlName="email" autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="field-group" [class.field-group--error]="motDePasse.invalid && motDePasse.touched">
+          <div class="field-header">
+            <label class="field-label" for="motDePasse">MOT DE PASSE</label>
+            <a href="#" class="link-gold">Changer de mot de passe</a>
+          </div>
+          <div class="field-row">
+            <span class="field-prefix">PW.</span>
+            <input id="motDePasse" [type]="showPassword() ? 'text' : 'password'"
+              class="field-input" placeholder="••••••••••••"
+              formControlName="motDePasse" autocomplete="current-password" />
+            <button type="button" class="show-btn" (click)="togglePassword()">
+              {{ showPassword() ? 'HIDE' : 'SHOW' }}
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner"></span>
+            @if (wakingUp()) { Démarrage du serveur… } @else { Connexion… }
+          } @else {
+            SE CONNECTER &nbsp;→
+          }
+        </button>
+
+      </form>
+
+      <div class="divider"></div>
+
+      <div class="info-card">
+        <div class="info-icon">?</div>
+        <div class="info-body">
+          <strong>Première connexion ?</strong>
+          <p>Veuillez contacter l'administrateur système pour activer votre compte ou récupérer vos accès temporaires.</p>
+          <!-- <a href="mailto:support.it@universite.dz" class="info-mail">support.it@universite.dz</a> -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
