@@ -1,38 +1,33 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { User } from '../admin/users/user.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
 
-  // Ton URL base pour le proxy
-  private apiUrl = '/api'; 
+  private apiUrl = 'https://gestionvoyage.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
-  // Fonction utilitaire pour définir les entêtes JSON
-  private getHttpOptions() {
-    return {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json'
-      })
-    };
-  }
-
   // GET — Liste tous les utilisateurs
-  getUtilisateurs(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/utilisateurs`);
+  getUtilisateurs(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/utilisateurs`);
   }
 
-  // POST — Créer un utilisateur avec les options JSON
-  creerUtilisateur(utilisateur: User): Observable<User> {
-    return this.http.post<User>(
-      `${this.apiUrl}/utilisateurs`, 
-      JSON.stringify(utilisateur), // On s'assure que l'objet est bien en chaîne JSON
-      this.getHttpOptions()
-    );
+  // GET — Récupérer les rôles disponibles
+  getRoles(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/roles`);
+  }
+
+  // POST — Créer un utilisateur avec roleId
+  creerUtilisateur(utilisateur: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/utilisateurs`, utilisateur);
+  }
+
+  // DELETE — Supprimer un utilisateur
+  supprimerUtilisateur(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/utilisateurs/${id}`);
   }
 }

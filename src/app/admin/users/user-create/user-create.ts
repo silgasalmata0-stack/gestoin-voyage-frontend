@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router'; // Import du Router
+import { RouterModule, Router } from '@angular/router';
 import { UserService } from '../../../services/user.service';
-import { User } from '../user.model';
 
 @Component({
   selector: 'app-user-create',
@@ -12,25 +11,19 @@ import { User } from '../user.model';
   templateUrl: './user-create.html',
   styleUrl: './user-create.css',
 })
-export class UserCreate {
+export class UserCreate implements OnInit {
 
   userForm: FormGroup;
   loading = false;
   erreur = '';
   succes = '';
   roleSelectionne = '';
-
-  roles = [
-    { valeur: 'ROLE_ENSEIGNANT', label: 'Enseignant Chercheur' },
-    { valeur: 'ROLE_DRIPE', label: 'Agent DRIPE' },
-    { valeur: 'ROLE_FINANCIER', label: 'Agent Financier' },
-    { valeur: 'ROLE_PRESIDENCE', label: 'Présidence' }
-  ];
+  roles: any[] = [];
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private router: Router // Injection du Router
+    private router: Router
   ) {
     this.userForm = this.fb.group({
       nom: ['', Validators.required],
@@ -38,7 +31,7 @@ export class UserCreate {
       email: ['', [Validators.required, Validators.email]],
       matricule: ['', Validators.required],
       motDePasse: ['', Validators.required],
-      role: ['', Validators.required],
+      roleId: ['', Validators.required],
       specialite: [''],
       grade: [''],
       departement: [''],
@@ -46,11 +39,34 @@ export class UserCreate {
     });
   }
 
-  onRoleChange(event: any): void {
-    this.roleSelectionne = event.target.value;
+  ngOnInit(): void {
+    this.chargerRoles();
   }
 
-  // ... tes imports restent les mêmes ...
+  // Charger les rôles depuis l'API
+  chargerRoles(): void {
+    this.userService.getRoles().subscribe({
+      next: (data) => {
+        this.roles = data;
+        console.log('Rôles chargés :', data);
+      },
+      error: (err) => {
+        console.error('Erreur chargement rôles :', err);
+        // Rôles par défaut si l'API échoue
+        this.roles = [
+          { id: 1, nom: 'ROLE_ENSEIGNANT', label: 'Enseignant Chercheur' },
+          { id: 2, nom: 'ROLE_DRIPE', label: 'Agent DRIPE' },
+          { id: 3, nom: 'ROLE_FINANCIER', label: 'Agent Financier' },
+          { id: 4, nom: 'ROLE_PRESIDENCE', label: 'Présidence' }
+        ];
+      }
+    });
+  }
+
+  onRoleChange(event: any): void {
+    const roleSelectionne = this.roles.find(r => r.id == event.target.value);
+    this.roleSelectionne = roleSelectionne?.nom || '';
+  }
 
   onSubmit(): void {
     if (this.userForm.invalid) {
@@ -62,16 +78,17 @@ export class UserCreate {
     this.erreur = '';
     this.succes = '';
 
-    // Préparation des données
     const donnees = { ...this.userForm.value };
 
-    // Nettoyage des champs si le rôle n'est pas Enseignant
-    if (donnees.role !== 'ROLE_ENSEIGNANT') {
+    // Nettoyer les champs enseignant si pas enseignant
+    if (this.roleSelectionne !== 'ROLE_ENSEIGNANT') {
       delete donnees.specialite;
       delete donnees.grade;
       delete donnees.departement;
       delete donnees.faculte;
     }
+
+    console.log('Données envoyées :', donnees);
 
     this.userService.creerUtilisateur(donnees).subscribe({
       next: () => {
@@ -80,13 +97,10 @@ export class UserCreate {
         setTimeout(() => this.router.navigate(['/admin/users']), 1500);
       },
       error: (err) => {
-        // Affiche l'erreur dans la console pour déboguer
-        console.error('Détail de l\'erreur :', err);
-        // Affiche l'erreur sur ton interface
+        console.error('Erreur :', err);
         this.erreur = err.error?.message || 'Erreur serveur. Vérifiez la console F12.';
         this.loading = false;
       }
     });
   }
-    }
-  
+}
