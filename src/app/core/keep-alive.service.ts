@@ -17,7 +17,7 @@ export class KeepAliveService {
   private readonly INTERVAL_MS = 13 * 60 * 1000;
 
   /** URL de santé Spring Boot (ou toute route légère du backend) */
-  private readonly pingUrl = environment.apiUrl.replace('/api', '/actuator/health');
+  private readonly pingUrl = environment.apiUrl.replace('/api', '/health');
 
   start(): void {
     if (this.timer) return; // déjà actif

@@ -7,7 +7,7 @@
       "Origin": "https://gestionvoyage.onrender.com"
     }
   },
-  "/actuator": {
+  "/health": {
     "target": "https://gestionvoyage.onrender.com",
     "secure": false,
     "changeOrigin": true,
