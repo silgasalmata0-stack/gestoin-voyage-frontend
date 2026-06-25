@@ -1,8 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { UserService } from '../../../services/user.service';
+import { UserService, UserCreatePayload } from '../../../services/user.service';
+
+// Rôles disponibles 
+const ROLES = [
+  { value: 'ROLE_ENSEIGNANT',  label: 'Enseignant Chercheur' },
+  { value: 'ROLE_DRIPE',       label: 'Agent DRIPE' },
+  { value: 'ROLE_FINANCIER',   label: 'Agent Financier' },
+  { value: 'ROLE_PRESIDENCE',  label: 'Présidence' },
+  { value: 'ROLE_ADMIN',       label: 'Administrateur Technique' },
+];
 
 @Component({
   selector: 'app-user-create',
@@ -11,95 +20,84 @@ import { UserService } from '../../../services/user.service';
   templateUrl: './user-create.html',
   styleUrl: './user-create.css',
 })
-export class UserCreate implements OnInit {
+export class UserCreate {
+  private fb          = inject(FormBuilder);
+  private userService = inject(UserService);
+  private router      = inject(Router);
 
-  userForm: FormGroup;
-  loading = false;
-  erreur = '';
-  succes = '';
-  roleSelectionne = '';
-  roles: any[] = [];
+  readonly roles = ROLES;
 
-  constructor(
-    private fb: FormBuilder,
-    private userService: UserService,
-    private router: Router
-  ) {
-    this.userForm = this.fb.group({
-      nom: ['', Validators.required],
-      prenom: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      matricule: ['', Validators.required],
-      motDePasse: ['', Validators.required],
-      roleId: ['', Validators.required],
-      specialite: [''],
-      grade: [''],
-      departement: [''],
-      faculte: ['']
-    });
+  loading = signal(false);
+  erreur  = signal('');
+  succes  = signal('');
+
+  userForm = this.fb.group({
+    nom:        ['', Validators.required],
+    prenom:     ['', Validators.required],
+    email:      ['', [Validators.required, Validators.email]],
+    matricule:  ['', Validators.required],
+    motDePasse: ['', [Validators.required, Validators.minLength(8)]],
+    role:       ['', Validators.required],
+    // Champs spécifiques ENSEIGNANT
+    specialite:  [''],
+    grade:       [''],
+    departement: [''],
+    faculte:     [''],
+  });
+
+  get roleSelectionne(): string {
+    return this.userForm.get('role')?.value ?? '';
   }
 
-  ngOnInit(): void {
-    this.chargerRoles();
-  }
-
-  // Charger les rôles depuis l'API
-  chargerRoles(): void {
-    this.userService.getRoles().subscribe({
-      next: (data) => {
-        this.roles = data;
-        console.log('Rôles chargés :', data);
-      },
-      error: (err) => {
-        console.error('Erreur chargement rôles :', err);
-        // Rôles par défaut si l'API échoue
-        this.roles = [
-          { id: 1, nom: 'ROLE_ENSEIGNANT', label: 'Enseignant Chercheur' },
-          { id: 2, nom: 'ROLE_DRIPE', label: 'Agent DRIPE' },
-          { id: 3, nom: 'ROLE_FINANCIER', label: 'Agent Financier' },
-          { id: 4, nom: 'ROLE_PRESIDENCE', label: 'Présidence' }
-        ];
-      }
-    });
-  }
-
-  onRoleChange(event: any): void {
-    const roleSelectionne = this.roles.find(r => r.id == event.target.value);
-    this.roleSelectionne = roleSelectionne?.nom || '';
+  get estEnseignant(): boolean {
+    return this.roleSelectionne === 'ROLE_ENSEIGNANT';
   }
 
   onSubmit(): void {
     if (this.userForm.invalid) {
-      this.erreur = 'Veuillez remplir correctement tous les champs requis.';
+      this.userForm.markAllAsTouched();
+      this.erreur.set('Veuillez remplir correctement tous les champs requis.');
       return;
     }
 
-    this.loading = true;
-    this.erreur = '';
-    this.succes = '';
+    this.loading.set(true);
+    this.erreur.set('');
+    this.succes.set('');
 
-    const donnees = { ...this.userForm.value };
+    const v = this.userForm.value;
 
-    // Nettoyer les champs enseignant si pas enseignant
-    if (this.roleSelectionne !== 'ROLE_ENSEIGNANT') {
-      delete donnees.specialite;
-      delete donnees.grade;
-      delete donnees.departement;
-      delete donnees.faculte;
+    // Construire le payload 
+    const payload: UserCreatePayload = {
+      matricule:  v.matricule!,
+      nom:        v.nom!,
+      prenom:     v.prenom!,
+      email:      v.email!,
+      motDePasse: v.motDePasse!,
+      role:       v.role!,  
+    };
+
+    // Ajouter les champs spécifiques 
+    if (this.estEnseignant) {
+      payload.specialite  = v.specialite  || '';
+      payload.grade       = v.grade       || undefined;
+      payload.departement = v.departement || undefined;
+      payload.faculte     = v.faculte     || undefined;
     }
 
-    console.log('Données envoyées :', donnees);
-
-    this.userService.creerUtilisateur(donnees).subscribe({
+    this.userService.creerUtilisateur(payload).subscribe({
       next: () => {
-        this.succes = 'Utilisateur créé avec succès !';
-        this.loading = false;
+        this.succes.set('Utilisateur créé avec succès !');
+        this.loading.set(false);
         setTimeout(() => this.router.navigate(['/admin/users']), 1500);
       },
       error: (err) => {
-        console.error('Erreur :', err);
-        this.erreur = err.error?.message || 'Erreur serveur. Vérifiez la console F12.';
-        this.loading = false;
+        console.error('Erreur création utilisateur :', err);
+        // Afficher les erreurs de validation champ par champ si disponibles
+        const detail = err.error?.errors
+          ? Object.entries(err.error.errors).map(([k, v]) => `${k}: ${v}`).join(' | ')
+          : err.error?.message ?? 'Erreur serveur.';
+        this.erreur.set(detail);
+        this.loading.set(false);
       }
     });
   }

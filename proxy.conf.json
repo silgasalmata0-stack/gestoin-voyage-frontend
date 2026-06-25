@@ -1,8 +1,18 @@
 {
   "/api": {
     "target": "https://gestionvoyage.onrender.com",
-    "secure": true,
+    "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug"
+    "headers": {
+      "Origin": "https://gestionvoyage.onrender.com"
+    }
+  },
+  "/health": {
+    "target": "https://gestionvoyage.onrender.com",
+    "secure": false,
+    "changeOrigin": true,
+    "headers": {
+      "Origin": "https://gestionvoyage.onrender.com"
+    }
   }
 }

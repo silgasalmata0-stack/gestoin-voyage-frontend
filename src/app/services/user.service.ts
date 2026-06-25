@@ -1,33 +1,41 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface UserCreatePayload {
+  matricule: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  motDePasse: string;
+  role: string; 
+  // Champs spécifiques ENSEIGNANT
+  specialite?: string;
+  grade?: string;
+  departement?: string;
+  faculte?: string;
+  // Autres rôles
+  fonction?: string;
+  service?: string;
+  titre?: string;
+  niveauAcces?: string;
+}
+
+@Injectable({ providedIn: 'root' })
 export class UserService {
+  private http = inject(HttpClient);
+  private readonly base = `${environment.apiUrl}/utilisateurs`;
 
-  private apiUrl = 'https://gestionvoyage.onrender.com/api';
-
-  constructor(private http: HttpClient) {}
-
-  // GET — Liste tous les utilisateurs
   getUtilisateurs(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/utilisateurs`);
+    return this.http.get<any[]>(this.base);
   }
 
-  // GET — Récupérer les rôles disponibles
-  getRoles(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/roles`);
+  creerUtilisateur(payload: UserCreatePayload): Observable<any> {
+    return this.http.post<any>(this.base, payload);
   }
 
-  // POST — Créer un utilisateur avec roleId
-  creerUtilisateur(utilisateur: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/utilisateurs`, utilisateur);
-  }
-
-  // DELETE — Supprimer un utilisateur
-  supprimerUtilisateur(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/utilisateurs/${id}`);
+  supprimerUtilisateur(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`);
   }
 }

@@ -6,36 +6,42 @@
     </button>
   </div>
 
-  <div *ngIf="loading" class="loading">
+  <div *ngIf="loading()" class="loading">
     Chargement en cours...
   </div>
 
-  <div *ngIf="erreur" class="erreur">
-    {{ erreur }}
+  <div *ngIf="erreur()" class="erreur">
+    {{ erreur() }}
   </div>
 
-  <table *ngIf="!loading && utilisateurs.length > 0">
+  <table *ngIf="!loading() && utilisateurs().length > 0">
     <thead>
       <tr>
         <th>Nom</th>
         <th>Prénom</th>
         <th>Email</th>
         <th>Rôle</th>
+        <th>Statut</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let user of utilisateurs">
+      <tr *ngFor="let user of utilisateurs()">
         <td>{{ user.nom }}</td>
         <td>{{ user.prenom }}</td>
         <td>{{ user.email }}</td>
         <td>
           <span class="badge">{{ user.role }}</span>
         </td>
+        <td>
+          <span [class]="user.actif ? 'badge-actif' : 'badge-inactif'">
+            {{ user.actif ? 'Actif' : 'Inactif' }}
+          </span>
+        </td>
       </tr>
     </tbody>
   </table>
 
-  <div *ngIf="!loading && utilisateurs.length === 0" class="vide">
+  <div *ngIf="!loading() && utilisateurs().length === 0" class="vide">
     Aucun utilisateur trouvé.
   </div>
 </div>
