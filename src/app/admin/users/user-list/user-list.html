@@ -1,0 +1,41 @@
+<div class="container">
+  <div class="header">
+    <h2>Liste des Utilisateurs</h2>
+    <button class="btn-create" routerLink="/admin/users/create">
+      + Créer un utilisateur
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    Chargement en cours...
+  </div>
+
+  <div *ngIf="erreur" class="erreur">
+    {{ erreur }}
+  </div>
+
+  <table *ngIf="!loading && utilisateurs.length > 0">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Email</th>
+        <th>Rôle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of utilisateurs">
+        <td>{{ user.nom }}</td>
+        <td>{{ user.prenom }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <span class="badge">{{ user.role }}</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && utilisateurs.length === 0" class="vide">
+    Aucun utilisateur trouvé.
+  </div>
+</div>

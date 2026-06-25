@@ -4,8 +4,21 @@ import { TokenStorage } from '../features/auth/infrastructure/token.storage';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = inject(TokenStorage).getAccessToken();
+
+  // On prépare les headers
+  const headers: { [key: string]: string } = {
+    'Content-Type': 'application/json'
+  };
+
+  // Si le token existe, on l'ajoute
   if (token) {
-    return next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));
+    headers['Authorization'] = `Bearer ${token}`;
   }
-  return next(req);
+
+  // On clone la requête avec les headers combinés
+  const authReq = req.clone({
+    setHeaders: headers
+  });
+
+  return next(authReq);
 };

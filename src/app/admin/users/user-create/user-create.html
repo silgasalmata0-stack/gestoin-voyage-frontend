@@ -1,0 +1,85 @@
+<div class="container">
+  <div class="header">
+    <h2>Créer un utilisateur</h2>
+    <a routerLink="/admin/users" class="btn-retour">← Retour à la liste</a>
+  </div>
+
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+
+    <div class="section">
+      <h3>Informations générales</h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom *</label>
+          <input type="text" formControlName="nom" placeholder="Nom"/>
+        </div>
+        <div class="form-group">
+          <label>Prénom *</label>
+          <input type="text" formControlName="prenom" placeholder="Prénom"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" formControlName="email" placeholder="email@univ.bf"/>
+        </div>
+        <div class="form-group">
+          <label>Matricule *</label>
+          <input type="text" formControlName="matricule" placeholder="ENS-001"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mot de passe *</label>
+          <input type="password" formControlName="motDePasse" placeholder="Mot de passe"/>
+        </div>
+        <div class="form-group">
+          <label>Rôle *</label>
+          <select formControlName="role" (change)="onRoleChange($event)">
+            <option value="">-- Choisir un rôle --</option>
+            <option *ngFor="let role of roles" [value]="role.valeur">
+              {{ role.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" *ngIf="roleSelectionne === 'ROLE_ENSEIGNANT'">
+      <h3>Informations Enseignant-Chercheur</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Spécialité</label>
+          <input type="text" formControlName="specialite" placeholder="Ex: Informatique"/>
+        </div>
+        <div class="form-group">
+          <label>Grade</label>
+          <input type="text" formControlName="grade" placeholder="Ex: Maître de conférences"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Département</label>
+          <input type="text" formControlName="departement" placeholder="Ex: Dept Info"/>
+        </div>
+        <div class="form-group">
+          <label>Faculté</label>
+          <input type="text" formControlName="faculte" placeholder="Ex: FSI"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-submit" [disabled]="loading">
+        {{ loading ? 'Création en cours...' : 'Créer l\'utilisateur' }}
+      </button>
+    </div>
+
+    <div *ngIf="erreur" style="color: red; margin-top: 15px; font-weight: bold;">{{ erreur }}</div>
+    <div *ngIf="succes" style="color: green; margin-top: 15px; font-weight: bold;">{{ succes }}</div>
+
+  </form>
+</div>
