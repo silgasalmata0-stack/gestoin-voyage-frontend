@@ -1,6 +1,5 @@
 <aside class="sidebar" [class.collapsed]="isCollapsed()">
 
-  <!-- En-tête -->
   <div class="sidebar-header">
     <img src="assets/images/ujkz.png" alt="Logo" class="sidebar-logo" />
     @if (!isCollapsed()) {
@@ -11,12 +10,10 @@
     }
     <button class="collapse-btn" (click)="toggleCollapse()" title="Réduire le menu">
       @if (isCollapsed()) {
-        <!-- Chevron droite -->
         <svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
         </svg>
       } @else {
-        <!-- Chevron gauche -->
         <svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
         </svg>
@@ -24,7 +21,6 @@
     </button>
   </div>
 
-  <!-- Navigation -->
   <nav class="sidebar-nav">
     @if (!isCollapsed()) {
       <span class="section-label">Administration</span>
@@ -33,7 +29,6 @@
     @for (item of menuItems; track item.label) {
       <div class="nav-item">
 
-        <!-- Bouton principal -->
         <button
           class="nav-btn"
           [class.active]="isExpanded(item.label)"
@@ -51,12 +46,13 @@
           }
         </button>
 
-        <!-- Sous-menu -->
         @if (!isCollapsed() && isExpanded(item.label)) {
           <ul class="sub-menu">
             @for (child of item.children; track child.label) {
               <li class="sub-item">
-                <button class="sub-btn">{{ child.label }}</button>
+                <a class="sub-btn" [routerLink]="child.link" routerLinkActive="active">
+                  {{ child.label }}
+                </a>
               </li>
             }
           </ul>

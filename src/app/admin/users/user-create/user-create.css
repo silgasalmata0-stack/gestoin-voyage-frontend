@@ -1,0 +1,97 @@
+.container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+h2 { color: #1F4E79; }
+h3 { color: #2E75B6; margin-bottom: 14px; }
+
+.btn-retour {
+  color: #1F4E79;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.section {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #555;
+}
+
+input, select {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.error {
+  color: red;
+  font-size: 11px;
+}
+
+.actions {
+  text-align: right;
+  margin-top: 16px;
+}
+
+.btn-submit {
+  background: #1F4E79;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-submit:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.succes {
+  background: #EAF3DE;
+  color: #27500A;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.erreur {
+  background: #FCEBEB;
+  color: #791F1F;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
