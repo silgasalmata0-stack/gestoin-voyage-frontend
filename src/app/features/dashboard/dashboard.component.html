@@ -1,0 +1,37 @@
+<div class="dashboard">
+
+  <div class="dashboard-header">
+    <div>
+      <h2>Tableau de bord</h2>
+      <p class="subtitle">
+        Système de Gestion des Voyages d'Études — Université
+      </p>
+    </div>
+    <div class="role-badge-header" *ngIf="role">
+      <i class="ti ti-shield-check"></i>
+      {{ role | slice:5 }}
+    </div>
+  </div>
+
+  <div class="alert-info">
+    <i class="ti ti-info-circle"></i>
+    Sélectionnez votre espace de travail pour accéder à vos fonctionnalités.
+  </div>
+
+  <div class="espaces-grid">
+    <a *ngFor="let espace of getEspacesVisibles()"
+      [routerLink]="espace.lien"
+      class="espace-card"
+      [class]="'espace-' + espace.couleur">
+      <div class="espace-icon">
+        <i class="ti" [class]="espace.icon"></i>
+      </div>
+      <div class="espace-body">
+        <div class="espace-titre">{{ espace.titre }}</div>
+        <div class="espace-desc">{{ espace.description }}</div>
+      </div>
+      <i class="ti ti-arrow-right espace-arrow"></i>
+    </a>
+  </div>
+
+</div>

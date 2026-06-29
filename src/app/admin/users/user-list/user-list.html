@@ -1,47 +1,119 @@
-<div class="container">
-  <div class="header">
-    <h2>Liste des Utilisateurs</h2>
-    <button class="btn-create" routerLink="/admin/users/create">
-      + Créer un utilisateur
-    </button>
+<div class="page">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div>
+      <h2>Gestion des utilisateurs</h2>
+      <p class="page-subtitle">Gérez les comptes de tous les acteurs du système</p>
+    </div>
+    <a routerLink="/admin/users/create" class="btn-primary">
+      <i class="ti ti-user-plus"></i> Créer un utilisateur
+    </a>
   </div>
 
+  <!-- Stats dynamiques -->
+  <div class="stats-row">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon"><i class="ti ti-users"></i></div>
+      <div>
+        <div class="stat-val">{{ totalUtilisateurs }}</div>
+        <div class="stat-lbl">Total utilisateurs</div>
+      </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon"><i class="ti ti-school"></i></div>
+      <div>
+        <div class="stat-val">{{ totalEnseignants }}</div>
+        <div class="stat-lbl">Enseignants-Chercheurs</div>
+      </div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-icon"><i class="ti ti-briefcase"></i></div>
+      <div>
+        <div class="stat-val">{{ totalAgents }}</div>
+        <div class="stat-lbl">Agents (DRIPE / SF / Présidence)</div>
+      </div>
+    </div>
+    <div class="stat-card stat-purple">
+      <div class="stat-icon"><i class="ti ti-settings"></i></div>
+      <div>
+        <div class="stat-val">{{ totalAdmins }}</div>
+        <div class="stat-lbl">Administrateurs techniques</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chargement -->
   <div *ngIf="loading()" class="loading">
-    Chargement en cours...
+    <i class="ti ti-loader"></i> Chargement en cours...
   </div>
 
-  <div *ngIf="erreur()" class="erreur">
-    {{ erreur() }}
+  <!-- Erreur -->
+  <div *ngIf="erreur()" class="alert alert-danger">
+    <i class="ti ti-alert-circle"></i> {{ erreur() }}
   </div>
 
-  <table *ngIf="!loading() && utilisateurs().length > 0">
-    <thead>
-      <tr>
-        <th>Nom</th>
-        <th>Prénom</th>
-        <th>Email</th>
-        <th>Rôle</th>
-        <th>Statut</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let user of utilisateurs()">
-        <td>{{ user.nom }}</td>
-        <td>{{ user.prenom }}</td>
-        <td>{{ user.email }}</td>
-        <td>
-          <span class="badge">{{ user.role }}</span>
-        </td>
-        <td>
-          <span [class]="user.actif ? 'badge-actif' : 'badge-inactif'">
-            {{ user.actif ? 'Actif' : 'Inactif' }}
-          </span>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div *ngIf="!loading() && utilisateurs().length === 0" class="vide">
-    Aucun utilisateur trouvé.
+  <!-- Tableau -->
+  <div class="table-card" *ngIf="!loading() && utilisateurs().length > 0">
+    <div class="table-header">
+      <span class="table-title">
+        <i class="ti ti-list"></i> Liste des utilisateurs
+      </span>
+      <span class="table-count">{{ totalUtilisateurs }} utilisateur(s)</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>Email</th>
+          <th>Matricule</th>
+          <th>Rôle</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of utilisateurs()">
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar">
+                {{ user.nom?.charAt(0) }}{{ user.prenom?.charAt(0) }}
+              </div>
+              <div>
+                <div class="user-name">{{ user.nom }} {{ user.prenom }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-secondary">{{ user.email }}</td>
+          <td class="text-secondary">{{ user.matricule }}</td>
+          <td>
+  <span class="role-badge"
+    [ngClass]="{
+      'role-enseignant': user.role === 'ROLE_ENSEIGNANT',
+      'role-dripe': user.role === 'ROLE_DRIPE',
+      'role-financier': user.role === 'ROLE_FINANCIER',
+      'role-presidence': user.role === 'ROLE_PRESIDENCE',
+      'role-admin': user.role === 'ROLE_ADMIN'
+    }">
+    {{ getRoleDisplayName(user.role) }}
+  </span>
+</td>
+          <td>
+            <span class="status-badge status-actif">
+              <i class="ti ti-circle-check"></i> Actif
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
+
+  <!-- Aucun utilisateur -->
+  <div *ngIf="!loading() && utilisateurs().length === 0" class="empty">
+    <i class="ti ti-users-off"></i>
+    <p>Aucun utilisateur trouvé</p>
+    <a routerLink="/admin/users/create" class="btn-primary">
+      Créer le premier utilisateur
+    </a>
+  </div>
+
 </div>

@@ -1,0 +1,204 @@
+<div class="page">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">
+        <a routerLink="/admin" class="breadcrumb-link">Tableau de bord</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Présidence</span>
+      </div>
+      <h2>Espace Présidence</h2>
+      <p class="subtitle">Gestion des sessions et validation des demandes de voyage</p>
+    </div>
+    <button class="btn-primary" (click)="ouvrirFormSession()" *ngIf="!sessionActive">
+      <i class="ti ti-calendar-plus"></i> Ouvrir une session
+    </button>
+    <div class="session-active-badge" *ngIf="sessionActive">
+      <i class="ti ti-circle-check"></i>
+      Session {{ sessionActive.annee }} active
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="succes" class="alert alert-success">
+    <i class="ti ti-circle-check"></i> {{ succes }}
+  </div>
+  <div *ngIf="erreur" class="alert alert-danger">
+    <i class="ti ti-alert-circle"></i> {{ erreur }}
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon"><i class="ti ti-files"></i></div>
+      <div>
+        <div class="stat-val">{{ stats.totalDemandes }}</div>
+        <div class="stat-lbl">Total demandes</div>
+      </div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-icon"><i class="ti ti-hourglass"></i></div>
+      <div>
+        <div class="stat-val">{{ stats.enAttente }}</div>
+        <div class="stat-lbl">En attente</div>
+      </div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-icon"><i class="ti ti-check"></i></div>
+      <div>
+        <div class="stat-val">{{ stats.validees }}</div>
+        <div class="stat-lbl">Validées</div>
+      </div>
+    </div>
+    <div class="stat-card stat-red">
+      <div class="stat-icon"><i class="ti ti-x"></i></div>
+      <div>
+        <div class="stat-val">{{ stats.rejetees }}</div>
+        <div class="stat-lbl">Rejetées</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire ouverture session -->
+<div class="form-card" *ngIf="showFormSession">
+  <div class="form-card-header">
+    <i class="ti ti-calendar-plus"></i>
+    <span>Ouvrir une session annuelle</span>
+  </div>
+  <div class="form-card-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Année académique *</label>
+        <input type="number" [(ngModel)]="sessionForm.annee" name="annee"/>
+      </div>
+      <div class="form-group">
+        <label>Budget disponible (FCFA) *</label>
+        <input type="number" [(ngModel)]="sessionForm.budgetDisponible"
+          name="budgetDisponible" placeholder="Ex: 15000000"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date d'ouverture *</label>
+        <input type="date" [(ngModel)]="sessionForm.dateOuverture"
+          name="dateOuverture"/>
+      </div>
+      <div class="form-group">
+        <label>Date de clôture *</label>
+        <input type="date" [(ngModel)]="sessionForm.dateCloture"
+          name="dateCloture"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Nombre de voyages autorisés *</label>
+      <input type="number" [(ngModel)]="sessionForm.nombreVoyagesAutorises"
+        name="nombreVoyagesAutorises" placeholder="Ex: 20"/>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn-ghost" (click)="fermerFormSession()">Annuler</button>
+    <button class="btn-primary" (click)="ouvrirSession()" [disabled]="loading">
+      <i class="ti ti-player-play"></i>
+      {{ loading ? 'Ouverture...' : 'Ouvrir la session' }}
+    </button>
+  </div>
+</div>
+  <!-- Session active -->
+  <div class="session-card" *ngIf="sessionActive">
+    <div class="session-card-header">
+      <i class="ti ti-calendar-check"></i>
+      <span>Session {{ sessionActive.annee }} — Active</span>
+    </div>
+    <div class="session-card-body">
+      <div class="session-info-grid">
+        <div class="session-info">
+          <span class="info-label">Date d'ouverture</span>
+          <span class="info-value">{{ sessionActive.dateOuverture }}</span>
+        </div>
+        <div class="session-info">
+          <span class="info-label">Date de clôture</span>
+          <span class="info-value">{{ sessionActive.dateCloture }}</span>
+        </div>
+        <div class="session-info">
+          <span class="info-label">Budget disponible</span>
+          <span class="info-value">{{ sessionActive.budgetDisponible | number }} FCFA</span>
+        </div>
+        <div class="session-info">
+          <span class="info-label">Voyages autorisés</span>
+          <span class="info-value">{{ sessionActive.nombreVoyagesAutorises }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Demandes à valider -->
+  <div class="table-card">
+    <div class="table-header">
+      <span class="table-title">
+        <i class="ti ti-list-check"></i> Dossiers transmis par la DRIPE
+      </span>
+      <span class="table-count">{{ stats.enAttente }} dossier(s) en attente</span>
+    </div>
+
+    <div class="empty" *ngIf="demandesAValider.length === 0 && !loading">
+      <i class="ti ti-inbox"></i>
+      <p>Aucun dossier en attente de validation</p>
+    </div>
+
+    <table *ngIf="demandesAValider.length > 0">
+      <thead>
+        <tr>
+          <th>Enseignant</th>
+          <th>Destination</th>
+          <th>Dates</th>
+          <th>Avis DRIPE</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let demande of demandesAValider">
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar">
+                {{ demande.enseignant?.nom?.charAt(0) }}
+              </div>
+              <div>
+                <div class="user-name">
+                  {{ demande.enseignant?.nom }} {{ demande.enseignant?.prenom }}
+                </div>
+                <div class="user-sub">{{ demande.enseignant?.departement }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="dest-cell">
+              <i class="ti ti-map-pin"></i>
+              {{ demande.ville }}, {{ demande.pays }}
+            </div>
+          </td>
+          <td class="text-secondary">
+            {{ demande.dateDepart }} → {{ demande.dateRetour }}
+          </td>
+          <td>
+            <span class="pill pill-green">
+              <i class="ti ti-check"></i> Conforme
+            </span>
+          </td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-valider" (click)="validerDemande(demande.id)">
+                <i class="ti ti-check"></i> Valider
+              </button>
+              <button class="btn-rejeter"
+                (click)="rejeterDemande(demande.id, 'Dossier incomplet')">
+                <i class="ti ti-x"></i> Rejeter
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

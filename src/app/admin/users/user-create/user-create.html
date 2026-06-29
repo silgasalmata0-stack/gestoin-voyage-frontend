@@ -1,85 +1,237 @@
-<div class="container">
-  <div class="header">
-    <h2>Créer un utilisateur</h2>
-    <a routerLink="/admin/users" class="btn-retour">← Retour à la liste</a>
+<div class="page">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <a routerLink="/admin/users" class="back-btn">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <div>
+        <h2>Créer un utilisateur</h2>
+        <p class="page-subtitle">Ajoutez un nouvel acteur au système de gestion des voyages</p>
+      </div>
+    </div>
+    <a routerLink="/admin/users" class="btn-ghost">
+      <i class="ti ti-users"></i> Voir la liste
+    </a>
+  </div>
+
+  <!-- Barre de progression -->
+  <div class="stepper">
+    <ng-container *ngFor="let etape of etapes; let i = index">
+      <div class="step-connector" *ngIf="i > 0" [class.done]="etapeActuelle > i + 1"></div>
+      <div class="stepper-item">
+        <div class="step-circle"
+          [class.done]="etapeActuelle > etape.numero"
+          [class.active]="etapeActuelle === etape.numero"
+          [class.idle]="etapeActuelle < etape.numero">
+          <i class="ti ti-check" *ngIf="etapeActuelle > etape.numero"></i>
+          <i class="ti" [class]="etape.icon" *ngIf="etapeActuelle <= etape.numero"></i>
+        </div>
+        <span class="step-label" [class.active]="etapeActuelle === etape.numero">
+          {{ etape.label }}
+        </span>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="succes" class="alert alert-success">
+    <i class="ti ti-circle-check"></i> {{ succes }}
+  </div>
+  <div *ngIf="erreur" class="alert alert-danger">
+    <i class="ti ti-alert-circle"></i> {{ erreur }}
   </div>
 
   <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
 
-    <div class="section">
-      <h3>Informations générales</h3>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nom *</label>
-          <input type="text" formControlName="nom" placeholder="Nom"/>
+    <!-- ÉTAPE 1 — Informations générales -->
+    <div class="form-card" *ngIf="etapeActuelle === 1">
+      <div class="form-card-header">
+        <i class="ti ti-user"></i>
+        <span>Informations générales</span>
+      </div>
+      <div class="form-card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom <span class="required">*</span></label>
+            <input type="text" formControlName="nom" placeholder="Nom de famille"/>
+            <span class="field-error"
+              *ngIf="userForm.get('nom')?.invalid && userForm.get('nom')?.touched">
+              Champ obligatoire
+            </span>
+          </div>
+          <div class="form-group">
+            <label>Prénom <span class="required">*</span></label>
+            <input type="text" formControlName="prenom" placeholder="Prénom"/>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Prénom *</label>
-          <input type="text" formControlName="prenom" placeholder="Prénom"/>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email institutionnel <span class="required">*</span></label>
+            <input type="email" formControlName="email" placeholder="nom@universite.bf"/>
+            <span class="field-error"
+              *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched">
+              Email invalide
+            </span>
+          </div>
+          <div class="form-group">
+            <label>Matricule <span class="required">*</span></label>
+            <input type="text" formControlName="matricule" placeholder="Ex: ENS-001"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Mot de passe <span class="required">*</span></label>
+            <input type="password" formControlName="motDePasse"
+              placeholder="Minimum 6 caractères"/>
+            <span class="field-error"
+              *ngIf="userForm.get('motDePasse')?.invalid && userForm.get('motDePasse')?.touched">
+              Minimum 6 caractères
+            </span>
+          </div>
+          <div class="form-group"></div>
         </div>
       </div>
+    </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Email *</label>
-          <input type="email" formControlName="email" placeholder="email@univ.bf"/>
-        </div>
-        <div class="form-group">
-          <label>Matricule *</label>
-          <input type="text" formControlName="matricule" placeholder="ENS-001"/>
-        </div>
+    <!-- ÉTAPE 2 — Rôle -->
+    <div class="form-card" *ngIf="etapeActuelle === 2">
+      <div class="form-card-header">
+        <i class="ti ti-shield-lock"></i>
+        <span>Rôle et permissions</span>
       </div>
-
-      <div class="form-row">
+      <div class="form-card-body">
         <div class="form-group">
-          <label>Mot de passe *</label>
-          <input type="password" formControlName="motDePasse" placeholder="Mot de passe"/>
-        </div>
-        <div class="form-group">
-          <label>Rôle *</label>
-          <select formControlName="role">
+          <label>Rôle dans le système <span class="required">*</span></label>
+          <select formControlName="roleId" (change)="onRoleChange($event)">
             <option value="">-- Choisir un rôle --</option>
-            <option *ngFor="let role of roles" [value]="role.value">
-              {{ role.label }}
+            <option *ngFor="let role of roles" [value]="role.id">
+              {{ role.label || role.nom }}
             </option>
           </select>
         </div>
+
+        <!-- Champs spécifiques enseignant -->
+        <div *ngIf="roleSelectionne === 'ROLE_ENSEIGNANT'" class="enseignant-fields">
+          <div class="enseignant-header">
+            <i class="ti ti-school"></i>
+            <span>Informations Enseignant-Chercheur</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Spécialité</label>
+              <input type="text" formControlName="specialite" placeholder="Ex: Informatique"/>
+            </div>
+            <div class="form-group">
+              <label>Grade</label>
+              <input type="text" formControlName="grade"
+                placeholder="Ex: Maître de conférences"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Département</label>
+              <input type="text" formControlName="departement" placeholder="Ex: Dept Info"/>
+            </div>
+            <div class="form-group">
+              <label>Faculté</label>
+              <input type="text" formControlName="faculte" placeholder="Ex: FSI"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Badges des rôles disponibles -->
+        <div class="roles-info">
+          <div class="role-badge role-enseignant">
+            <i class="ti ti-school"></i> Enseignant Chercheur
+          </div>
+          <div class="role-badge role-dripe">
+            <i class="ti ti-search"></i> Agent DRIPE
+          </div>
+          <div class="role-badge role-financier">
+            <i class="ti ti-coin"></i> Agent Financier
+          </div>
+          <div class="role-badge role-presidence">
+            <i class="ti ti-building-community"></i> Présidence
+          </div>
+          <div class="role-badge role-admin">
+            <i class="ti ti-settings"></i> Administrateur
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="section" *ngIf="roleSelectionne === 'ROLE_ENSEIGNANT'">
-      <h3>Informations Enseignant-Chercheur</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Spécialité</label>
-          <input type="text" formControlName="specialite" placeholder="Ex: Informatique"/>
-        </div>
-        <div class="form-group">
-          <label>Grade</label>
-          <input type="text" formControlName="grade" placeholder="Ex: Maître de conférences"/>
-        </div>
+    <!-- ÉTAPE 3 — Confirmation -->
+    <div class="form-card" *ngIf="etapeActuelle === 3">
+      <div class="form-card-header">
+        <i class="ti ti-list-check"></i>
+        <span>Récapitulatif</span>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Département</label>
-          <input type="text" formControlName="departement" placeholder="Ex: Dept Info"/>
+      <div class="form-card-body">
+        <div class="recap-grid">
+          <div class="recap-item">
+            <span class="recap-label">Nom complet</span>
+            <span class="recap-value">
+              {{ userForm.get('nom')?.value }} {{ userForm.get('prenom')?.value }}
+            </span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Email</span>
+            <span class="recap-value">{{ userForm.get('email')?.value }}</span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Matricule</span>
+            <span class="recap-value">{{ userForm.get('matricule')?.value }}</span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Rôle</span>
+            <span class="recap-value">{{ getRoleLabel() }}</span>
+          </div>
+          <div class="recap-item" *ngIf="roleSelectionne === 'ROLE_ENSEIGNANT'">
+            <span class="recap-label">Spécialité</span>
+            <span class="recap-value">
+              {{ userForm.get('specialite')?.value || '—' }}
+            </span>
+          </div>
+          <div class="recap-item" *ngIf="roleSelectionne === 'ROLE_ENSEIGNANT'">
+            <span class="recap-label">Département</span>
+            <span class="recap-value">
+              {{ userForm.get('departement')?.value || '—' }}
+            </span>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Faculté</label>
-          <input type="text" formControlName="faculte" placeholder="Ex: FSI"/>
+        <div class="alert alert-info" style="margin-top:14px">
+          <i class="ti ti-info-circle"></i>
+          Le compte sera actif immédiatement après création.
         </div>
       </div>
     </div>
 
-    <div class="actions">
-      <button type="submit" class="btn-submit" [disabled]="loading()">
-        {{ loading() ? 'Création en cours...' : 'Créer l\'utilisateur' }}
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" routerLink="/admin/users">
+        Annuler
       </button>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn-secondary"
+          *ngIf="etapeActuelle > 1"
+          (click)="etapePrecedente()">
+          <i class="ti ti-arrow-left"></i> Précédent
+        </button>
+        <button type="button" class="btn-primary"
+          *ngIf="etapeActuelle < totalEtapes"
+          (click)="etapeSuivante()">
+          Suivant <i class="ti ti-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn-primary"
+          *ngIf="etapeActuelle === totalEtapes"
+          [disabled]="userForm.invalid || loading">
+          <i class="ti ti-user-plus"></i>
+          {{ loading ? 'Création en cours...' : 'Créer l\'utilisateur' }}
+        </button>
+      </div>
     </div>
-
-    <div *ngIf="erreur()" style="color: red; margin-top: 15px; font-weight: bold;">{{ erreur() }}</div>
-    <div *ngIf="succes()" style="color: green; margin-top: 15px; font-weight: bold;">{{ succes() }}</div>
 
   </form>
 </div>

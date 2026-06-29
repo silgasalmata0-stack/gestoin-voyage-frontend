@@ -32,6 +32,24 @@ export const routes: Routes = [
         loadComponent: () => 
           import('./admin/users/user-create/user-create').then((m) => m.UserCreate),
       },
+      {
+  path: 'demandes/create',
+  loadComponent: () =>
+    import('./features/demandes/demande-create/demande-create.component').then(
+      (m) => m.DemandeCreateComponent
+    ),
+},
+
+{
+  path: '',
+  loadComponent: () =>
+    import('./features/dashboard/dashboard.component').then(
+      (m) => m.DashboardComponent
+    ),
+},
+
+
+
       // Tu pourras ajouter d'autres routes ici plus tard
     ],
   },

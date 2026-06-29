@@ -9,13 +9,11 @@ export interface UserCreatePayload {
   prenom: string;
   email: string;
   motDePasse: string;
-  role: string; 
-  // Champs spécifiques ENSEIGNANT
+  role: number | string;
   specialite?: string;
   grade?: string;
   departement?: string;
   faculte?: string;
-  // Autres rôles
   fonction?: string;
   service?: string;
   titre?: string;
@@ -26,9 +24,15 @@ export interface UserCreatePayload {
 export class UserService {
   private http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/utilisateurs`;
+  private readonly rolesUrl = `${environment.apiUrl}/roles`;
 
   getUtilisateurs(): Observable<any[]> {
     return this.http.get<any[]>(this.base);
+  }
+
+  // ← Méthode ajoutée
+  getRoles(): Observable<any[]> {
+    return this.http.get<any[]>(this.rolesUrl);
   }
 
   creerUtilisateur(payload: UserCreatePayload): Observable<any> {

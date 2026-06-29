@@ -1,0 +1,190 @@
+<div class="page">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <a routerLink="/admin" class="back-btn">
+        <i class="ti ti-arrow-left"></i>
+      </a>
+      <div>
+        <h2>Nouvelle demande de voyage</h2>
+        <p class="page-subtitle">Remplissez les informations pour soumettre votre demande</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barre de progression -->
+  <div class="stepper">
+    <div *ngFor="let etape of etapes; let i = index" class="stepper-item">
+      <div class="step-connector" *ngIf="i > 0"
+        [class.done]="etapeActuelle > i + 1">
+      </div>
+      <div class="step-circle"
+        [class.done]="etapeActuelle > etape.numero"
+        [class.active]="etapeActuelle === etape.numero"
+        [class.idle]="etapeActuelle < etape.numero">
+        <i class="ti ti-check" *ngIf="etapeActuelle > etape.numero"></i>
+        <span *ngIf="etapeActuelle <= etape.numero">{{ etape.numero }}</span>
+      </div>
+      <span class="step-label" [class.active]="etapeActuelle === etape.numero">
+        {{ etape.label }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="succes" class="alert alert-success">
+    <i class="ti ti-circle-check"></i> {{ succes }}
+  </div>
+  <div *ngIf="erreur" class="alert alert-danger">
+    <i class="ti ti-alert-circle"></i> {{ erreur }}
+  </div>
+
+  <form [formGroup]="demandeForm" (ngSubmit)="onSubmit()">
+
+    <!-- ÉTAPE 1 — Destination -->
+    <div class="form-card" *ngIf="etapeActuelle === 1">
+      <div class="form-card-header">
+        <i class="ti ti-map-location-dot"></i>
+        <span>Destination du voyage</span>
+      </div>
+      <div class="form-card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Zone tarifaire <span class="required">*</span></label>
+            <select formControlName="zoneTarifId">
+              <option value="">-- Sélectionner une zone --</option>
+              <option *ngFor="let zone of zones" [value]="zone.id">
+                {{ zone.nomZone }} — {{ zone.montantJournalier }} FCFA/jour
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Pays <span class="required">*</span></label>
+            <input type="text" formControlName="pays" placeholder="Ex: TCHAD"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ville <span class="required">*</span></label>
+            <input type="text" formControlName="ville" placeholder="Ex: MOUNDOU"/>
+          </div>
+          <div class="form-group">
+            <label>Établissement d'accueil <span class="required">*</span></label>
+            <input type="text" formControlName="etablissementAccueil" placeholder="Ex: Université Mahamat"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉTAPE 2 — Voyage -->
+    <div class="form-card" *ngIf="etapeActuelle === 2">
+      <div class="form-card-header">
+        <i class="ti ti-target"></i>
+        <span>Détails du voyage</span>
+      </div>
+      <div class="form-card-body">
+        <div class="form-group">
+          <label>Motif du voyage <span class="required">*</span></label>
+          <textarea formControlName="motifVoyage" rows="4"
+            placeholder="Décrivez l'objectif scientifique de ce voyage..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date de départ <span class="required">*</span></label>
+            <input type="date" formControlName="dateDepart"/>
+          </div>
+          <div class="form-group">
+            <label>Date de retour <span class="required">*</span></label>
+            <input type="date" formControlName="dateRetour"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉTAPE 3 — Documents -->
+    <div class="form-card" *ngIf="etapeActuelle === 3">
+      <div class="form-card-header">
+        <i class="ti ti-paperclip"></i>
+        <span>Pièces justificatives</span>
+      </div>
+      <div class="form-card-body">
+        <div class="alert alert-info">
+          <i class="ti ti-info-circle"></i>
+          La lettre d'invitation officielle est obligatoire pour la vérification par la DRIPE.
+        </div>
+        <div class="form-group">
+          <label>Lien lettre d'invitation <span class="required">*</span></label>
+          <input type="url" formControlName="lettreInvitationUrl"
+            placeholder="https://storage/invitation.pdf"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉTAPE 4 — Confirmation -->
+    <div class="form-card" *ngIf="etapeActuelle === 4">
+      <div class="form-card-header">
+        <i class="ti ti-list-check"></i>
+        <span>Récapitulatif de la demande</span>
+      </div>
+      <div class="form-card-body">
+        <div class="recap-grid">
+          <div class="recap-item">
+            <span class="recap-label">Pays</span>
+            <span class="recap-value">{{ demandeForm.get('pays')?.value }}</span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Ville</span>
+            <span class="recap-value">{{ demandeForm.get('ville')?.value }}</span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Établissement</span>
+            <span class="recap-value">{{ demandeForm.get('etablissementAccueil')?.value }}</span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Date de départ</span>
+            <span class="recap-value">{{ demandeForm.get('dateDepart')?.value }}</span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Date de retour</span>
+            <span class="recap-value">{{ demandeForm.get('dateRetour')?.value }}</span>
+          </div>
+          <div class="recap-item">
+            <span class="recap-label">Lettre invitation</span>
+            <span class="recap-value" style="word-break:break-all">
+              {{ demandeForm.get('lettreInvitationUrl')?.value }}
+            </span>
+          </div>
+        </div>
+        <div class="alert alert-info" style="margin-top:14px">
+          <i class="ti ti-info-circle"></i>
+          Après soumission votre demande sera transmise à la DRIPE pour vérification.
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-ghost" routerLink="/admin">
+        Annuler
+      </button>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn-secondary"
+          *ngIf="etapeActuelle > 1" (click)="etapePrecedente()">
+          <i class="ti ti-arrow-left"></i> Précédent
+        </button>
+        <button type="button" class="btn-primary"
+          *ngIf="etapeActuelle < totalEtapes" (click)="etapeSuivante()">
+          Suivant <i class="ti ti-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn-primary"
+          *ngIf="etapeActuelle === totalEtapes"
+          [disabled]="demandeForm.invalid || loading">
+          <i class="ti ti-send"></i>
+          {{ loading ? 'Envoi en cours...' : 'Soumettre la demande' }}
+        </button>
+      </div>
+    </div>
+
+  </form>
+</div>

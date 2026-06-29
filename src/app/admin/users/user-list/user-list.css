@@ -1,80 +1,191 @@
-.container {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-}
-
-.header {
+.page {
+  padding: 24px 32px;
+  width: 100%;
+  font-family: 'Segoe UI', Arial, sans-serif;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-header {
+  display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  justify-content: space-between;
 }
+h2 { color: #1F4E79; font-size: 20px; font-weight: 600; margin: 0; }
+.page-subtitle { color: #888; font-size: 12px; margin: 3px 0 0; }
 
-h2 {
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid;
+}
+.stat-blue { background: #E6F1FB; border-color: #85B7EB; }
+.stat-green { background: #EAF3DE; border-color: #97C459; }
+.stat-amber { background: #FAEEDA; border-color: #FAC775; }
+.stat-purple { background: #EEEDFE; border-color: #AFA9EC; }
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.stat-blue .stat-icon { color: #0C447C; }
+.stat-green .stat-icon { color: #27500A; }
+.stat-amber .stat-icon { color: #633806; }
+.stat-purple .stat-icon { color: #3C3489; }
+.stat-val { font-size: 24px; font-weight: 600; color: #1A1A2E; line-height: 1; }
+.stat-lbl { font-size: 11px; color: #666; margin-top: 3px; }
+
+.table-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e0e0e0;
+}
+.table-title {
+  font-size: 13px;
+  font-weight: 600;
   color: #1F4E79;
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-
-.btn-create {
-  background: #1F4E79;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 14px;
+.table-count {
+  font-size: 11px;
+  color: #888;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
 }
+thead { background: #EBF3FD; }
+th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1F4E79;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f9f9f9; }
 
-thead {
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #E6F1FB;
+  color: #0C447C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.user-name { font-weight: 500; font-size: 13px; }
+.text-secondary { color: #666; }
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.role-enseignant { background: #E1F5EE; color: #085041; }
+.role-dripe { background: #E6F1FB; color: #0C447C; }
+.role-financier { background: #FAECE7; color: #712B13; }
+.role-presidence { background: #EEEDFE; color: #3C3489; }
+.role-admin { background: #F1EFE8; color: #444441; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.status-actif { background: #EAF3DE; color: #27500A; }
+
+.btn-primary {
   background: #1F4E79;
   color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.btn-primary:hover { background: #2E75B6; }
+
+.loading {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+  font-size: 13px;
 }
 
-th, td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-tr:hover {
-  background: #f5f5f5;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 12px;
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
   font-size: 12px;
-  font-weight: bold;
 }
+.alert-danger { background: #FCEBEB; color: #791F1F; border: 1px solid #F09595; }
 
-.badge-enseignant { background: #E1F5EE; color: #085041; }
-.badge-dripe { background: #E6F1FB; color: #0C447C; }
-.badge-financier { background: #FAECE7; color: #712B13; }
-.badge-presidence { background: #EEEDFE; color: #3C3489; }
-
-.btn-edit {
-  background: #2E75B6;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 5px;
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
-
-.btn-delete {
-  background: #C53030;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.loading { color: #888; text-align: center; padding: 20px; }
-.erreur { color: red; padding: 10px; background: #FEE; border-radius: 6px; }
-.vide { text-align: center; color: #888; padding: 20px; }
+.empty i { font-size: 40px; color: #ccc; }
+.empty p { font-size: 14px; }
