@@ -1,85 +1,152 @@
-<div class="container">
-  <div class="header">
-    <h2>Créer un utilisateur</h2>
-    <a routerLink="/admin/users" class="btn-retour">← Retour à la liste</a>
+<div class="uc-page">
+
+  <div class="uc-header">
+    <a routerLink="/admin/users" class="btn-back">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Retour
+    </a>
+    <div>
+      <h1 class="uc-title">Créer un utilisateur</h1>
+      <p class="uc-sub">Ajoutez un nouveau membre au portail de gestion des mobilités.</p>
+    </div>
   </div>
 
-  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+  @if (succes()) {
+    <div class="success-banner">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg>
+      Utilisateur créé avec succès ! Redirection en cours…
+    </div>
+  }
 
-    <div class="section">
-      <h3>Informations générales</h3>
+  @if (erreur()) {
+    <div class="alert-error">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      {{ erreur() }}
+    </div>
+  }
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nom *</label>
-          <input type="text" formControlName="nom" placeholder="Nom"/>
-        </div>
-        <div class="form-group">
-          <label>Prénom *</label>
-          <input type="text" formControlName="prenom" placeholder="Prénom"/>
-        </div>
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()" novalidate class="uc-form">
+
+    <div class="uc-card">
+      <div class="card-title">
+        <div class="card-title-dot"></div>
+        Rôle *
       </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Email *</label>
-          <input type="email" formControlName="email" placeholder="email@univ.bf"/>
-        </div>
-        <div class="form-group">
-          <label>Matricule *</label>
-          <input type="text" formControlName="matricule" placeholder="ENS-001"/>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Mot de passe *</label>
-          <input type="password" formControlName="motDePasse" placeholder="Mot de passe"/>
-        </div>
-        <div class="form-group">
-          <label>Rôle *</label>
-          <select formControlName="role">
-            <option value="">-- Choisir un rôle --</option>
-            <option *ngFor="let role of roles" [value]="role.value">
-              {{ role.label }}
-            </option>
-          </select>
-        </div>
+      <div class="role-grid">
+        @for (r of roles; track r.value) {
+          <button type="button"
+            class="role-card"
+            [class.role-card--active]="roleChoisi() === r.value"
+            (click)="setRole(r.value)">
+            <div class="role-card-check">
+              @if (roleChoisi() === r.value) {
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              }
+            </div>
+            <div class="role-card-label">{{ r.label }}</div>
+            <div class="role-card-desc">{{ r.desc }}</div>
+          </button>
+        }
       </div>
     </div>
 
-    <div class="section" *ngIf="roleSelectionne === 'ROLE_ENSEIGNANT'">
-      <h3>Informations Enseignant-Chercheur</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Spécialité</label>
-          <input type="text" formControlName="specialite" placeholder="Ex: Informatique"/>
+    <div class="uc-card">
+      <div class="card-title">
+        <div class="card-title-dot"></div>
+        Informations personnelles
+      </div>
+
+      <div class="field-row-2">
+        <div class="field-group" [class.field-group--error]="f('nom').invalid && f('nom').touched">
+          <label class="field-label">Nom *</label>
+          <input type="text" class="field-input" formControlName="nom" placeholder="OUEDRAOGO" />
+          @if (f('nom').invalid && f('nom').touched) {
+            <span class="field-error">Requis</span>
+          }
         </div>
-        <div class="form-group">
-          <label>Grade</label>
-          <input type="text" formControlName="grade" placeholder="Ex: Maître de conférences"/>
+        <div class="field-group" [class.field-group--error]="f('prenom').invalid && f('prenom').touched">
+          <label class="field-label">Prénom *</label>
+          <input type="text" class="field-input" formControlName="prenom" placeholder="Jean" />
+          @if (f('prenom').invalid && f('prenom').touched) {
+            <span class="field-error">Requis</span>
+          }
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Département</label>
-          <input type="text" formControlName="departement" placeholder="Ex: Dept Info"/>
+
+      <div class="field-row-2">
+        <div class="field-group" [class.field-group--error]="f('email').invalid && f('email').touched">
+          <label class="field-label">Email *</label>
+          <input type="email" class="field-input" formControlName="email" placeholder="prenom.nom@ujkz.bf" />
+          @if (f('email').invalid && f('email').touched) {
+            <span class="field-error">Email invalide</span>
+          }
         </div>
-        <div class="form-group">
-          <label>Faculté</label>
-          <input type="text" formControlName="faculte" placeholder="Ex: FSI"/>
+        <div class="field-group" [class.field-group--error]="f('matricule').invalid && f('matricule').touched">
+          <label class="field-label">Matricule *</label>
+          <input type="text" class="field-input" formControlName="matricule" placeholder="ENS-001" />
+          @if (f('matricule').invalid && f('matricule').touched) {
+            <span class="field-error">Requis</span>
+          }
         </div>
+      </div>
+
+      <div class="field-group" [class.field-group--error]="f('motDePasse').invalid && f('motDePasse').touched" style="max-width: 50%; padding-right: 7px;">
+        <label class="field-label">Mot de passe *</label>
+        <div class="field-input-wrap">
+          <input [type]="showPwd() ? 'text' : 'password'"
+            class="field-input field-input--pwd"
+            formControlName="motDePasse"
+            placeholder="8 caractères minimum" />
+          <button type="button" class="show-btn" (click)="showPwd.update(v => !v)" tabindex="-1">
+            {{ showPwd() ? 'Masquer' : 'Voir' }}
+          </button>
+        </div>
+        @if (f('motDePasse').errors?.['minlength'] && f('motDePasse').touched) {
+          <span class="field-error">8 caractères minimum</span>
+        }
       </div>
     </div>
 
-    <div class="actions">
-      <button type="submit" class="btn-submit" [disabled]="loading()">
-        {{ loading() ? 'Création en cours...' : 'Créer l\'utilisateur' }}
+    @if (estEnseignant) {
+      <div class="uc-card uc-card--highlight">
+        <div class="card-title">
+          <div class="card-title-dot card-title-dot--green"></div>
+          Informations académiques <span class="optional-tag">optionnel</span>
+        </div>
+        <div class="field-row-2">
+          <div class="field-group">
+            <label class="field-label">Spécialité</label>
+            <input type="text" class="field-input" formControlName="specialite" placeholder="Ex : Informatique" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Grade</label>
+            <input type="text" class="field-input" formControlName="grade" placeholder="Ex : Maître de conférences" />
+          </div>
+        </div>
+        <div class="field-row-2">
+          <div class="field-group">
+            <label class="field-label">Département</label>
+            <input type="text" class="field-input" formControlName="departement" placeholder="Ex : Dept. Informatique" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Faculté</label>
+            <input type="text" class="field-input" formControlName="faculte" placeholder="Ex : FSI" />
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="uc-actions">
+      <a routerLink="/admin/users" class="btn-secondary">Annuler</a>
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner"></span> Création en cours…
+        } @else {
+          <svg viewBox="0 0 24 24" fill="currentColor" class="btn-icon"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Créer l'utilisateur
+        }
       </button>
     </div>
-
-    <div *ngIf="erreur()" style="color: red; margin-top: 15px; font-weight: bold;">{{ erreur() }}</div>
-    <div *ngIf="succes()" style="color: green; margin-top: 15px; font-weight: bold;">{{ succes() }}</div>
 
   </form>
 </div>

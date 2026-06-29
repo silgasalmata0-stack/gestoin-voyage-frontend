@@ -1,5 +1,6 @@
 <div class="login-page">
 
+  <!-- ═══ PANNEAU GAUCHE ═══ -->
   <section class="left-panel" aria-hidden="true">
     <div class="left-top">
       <div class="logo-area">
@@ -12,97 +13,234 @@
         </div>
       </div>
     </div>
-
- <div class="left-body">
-  <h1 class="hero-title">
-    Portail de Gestion<br>
-    des <em class="gold">Mobilités</em><br>
-    Universitaires
-  </h1>
-</div>
-
+    <div class="left-body">
+      <h1 class="hero-title">
+        Portail de Gestion<br>
+        des <em class="gold">Mobilités</em><br>
+        Universitaires
+      </h1>
+      <p class="hero-sub">Planification · Suivi · Justification</p>
+    </div>
     <div class="left-bottom">
-      
       <p class="system-log">
-        Accès restreint au personnel autorisé et aux étudiants
-        inscrits aux programmes de mobilité internationale.
+        Accès réservé au personnel académique autorisé et aux enseignants-chercheurs de l'UJKZ.
       </p>
     </div>
   </section>
 
+  <!-- ═══ PANNEAU DROIT ═══ -->
   <section class="right-panel">
     <div class="form-wrapper">
 
-      <h2 class="form-title">Connectez-vous à votre compte</h2>
-      <p class="form-subtitle">Entrez vos identifiants académiques pour continuer.</p>
+      <!-- Tabs -->
+      <div class="tabs">
+        <button
+          class="tab-btn"
+          [class.tab-btn--active]="onglet() === 'connexion'"
+          (click)="setOnglet('connexion')">
+          Se connecter
+        </button>
+        <button
+          class="tab-btn"
+          [class.tab-btn--active]="onglet() === 'inscription'"
+          (click)="setOnglet('inscription')">
+          S'inscrire
+          <span class="tab-badge">Enseignants</span>
+        </button>
+      </div>
 
+      <!-- Alertes communes -->
       @if (wakingUp()) {
         <div class="alert alert--waking">
           <span class="pulse-dot"></span>
           Le serveur se réveille, patientez quelques secondes…
         </div>
       }
-
       @if (errorMessage()) {
-        <div class="alert alert--error">{{ errorMessage() }}</div>
+        <div class="alert alert--error">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="alert-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          {{ errorMessage() }}
+        </div>
       }
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+      <!-- ══════════════ TAB CONNEXION ══════════════ -->
+      @if (onglet() === 'connexion') {
+        <div class="tab-content">
+          <div class="form-header">
+            <h2 class="form-title">Bienvenue</h2>
+            <p class="form-subtitle">Entrez vos identifiants académiques pour accéder au portail.</p>
+          </div>
 
-        <div class="field-group" [class.field-group--error]="email.invalid && email.touched">
-          <div class="field-header">
-            <label class="field-label" for="email">IDENTIFIANT</label>
-            @if (email.invalid && email.touched) {
-              <span class="badge badge--error">REQUIS</span>
-            } @else {
-              <span class="badge">REQUIRED</span>
-            }
-          </div>
-          <div class="field-row">
-            <span class="field-prefix">ID.</span>
-            <input id="email" type="email" class="field-input"
-              placeholder="nom.prenom@universite.edu"
-              formControlName="email" autocomplete="email" />
-          </div>
-        </div>
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="auth-form">
 
-        <div class="field-group" [class.field-group--error]="motDePasse.invalid && motDePasse.touched">
-          <div class="field-header">
-            <label class="field-label" for="motDePasse">MOT DE PASSE</label>
-            <a href="#" class="link-gold">Changer de mot de passe</a>
-          </div>
-          <div class="field-row">
-            <span class="field-prefix">PW.</span>
-            <input id="motDePasse" [type]="showPassword() ? 'text' : 'password'"
-              class="field-input" placeholder="••••••••••••"
-              formControlName="motDePasse" autocomplete="current-password" />
-            <button type="button" class="show-btn" (click)="togglePassword()">
-              {{ showPassword() ? 'HIDE' : 'SHOW' }}
+            <!-- Email -->
+            <div class="field-group" [class.field-group--error]="email.invalid && email.touched">
+              <label class="field-label" for="email">Adresse email</label>
+              <div class="field-input-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                <input id="email" type="email" class="field-input"
+                  placeholder="prenom.nom@ujkz.bf"
+                  formControlName="email" autocomplete="email" />
+              </div>
+              @if (email.invalid && email.touched) {
+                <span class="field-error">Email invalide</span>
+              }
+            </div>
+
+            <!-- Mot de passe -->
+            <div class="field-group" [class.field-group--error]="motDePasse.invalid && motDePasse.touched">
+              <div class="field-label-row">
+                <label class="field-label" for="motDePasse">Mot de passe</label>
+                <a href="#" class="link-secondary">Mot de passe oublié ?</a>
+              </div>
+              <div class="field-input-wrap">
+                <svg class="field-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                <input id="motDePasse" [type]="showPassword() ? 'text' : 'password'"
+                  class="field-input field-input--pwd" placeholder="••••••••"
+                  formControlName="motDePasse" autocomplete="current-password" />
+                <button type="button" class="show-btn" (click)="togglePassword()" tabindex="-1">
+                  {{ showPassword() ? 'Masquer' : 'Voir' }}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-full" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span class="spinner"></span>
+                @if (wakingUp()) { Démarrage… } @else { Connexion… }
+              } @else {
+                Se connecter
+              }
             </button>
-          </div>
-        </div>
 
-        <button type="submit" class="btn-submit" [disabled]="isLoading()">
-          @if (isLoading()) {
-            <span class="spinner"></span>
-            @if (wakingUp()) { Démarrage du serveur… } @else { Connexion… }
+          </form>
+        </div>
+      }
+
+      <!-- ══════════════ TAB INSCRIPTION ══════════════ -->
+      @if (onglet() === 'inscription') {
+        <div class="tab-content">
+
+          @if (inscriptionOk()) {
+            <div class="inscription-success">
+              <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg>
+              </div>
+              <h3>Demande envoyée !</h3>
+              <p>Votre compte a été créé et est <strong>en attente de validation</strong> par un administrateur. Vous recevrez une confirmation une fois activé.</p>
+              <button class="btn-primary" (click)="setOnglet('connexion')">Retour à la connexion</button>
+            </div>
           } @else {
-            SE CONNECTER &nbsp;→
+            <div class="form-header">
+              <h2 class="form-title">Créer un compte</h2>
+              <p class="form-subtitle">Réservé aux enseignants-chercheurs <strong>&#64;ujkz.bf</strong>. Le compte sera activé par un administrateur.</p>
+            </div>
+
+            <form [formGroup]="inscriptionForm" (ngSubmit)="onInscrire()" novalidate class="auth-form">
+
+              <!-- Nom + Prénom -->
+              <div class="field-row-2">
+                <div class="field-group" [class.field-group--error]="iNom.invalid && iNom.touched">
+                  <label class="field-label">Nom *</label>
+                  <input type="text" class="field-input" formControlName="nom" placeholder="OUEDRAOGO" />
+                  @if (iNom.invalid && iNom.touched) {
+                    <span class="field-error">Requis</span>
+                  }
+                </div>
+                <div class="field-group" [class.field-group--error]="iPrenom.invalid && iPrenom.touched">
+                  <label class="field-label">Prénom *</label>
+                  <input type="text" class="field-input" formControlName="prenom" placeholder="Jean" />
+                  @if (iPrenom.invalid && iPrenom.touched) {
+                    <span class="field-error">Requis</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="field-group" [class.field-group--error]="iEmail.invalid && iEmail.touched">
+                <label class="field-label">Email institutionnel *</label>
+                <div class="field-input-wrap">
+                  <svg class="field-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                  <input type="email" class="field-input"
+                    placeholder="prenom.nom@ujkz.bf"
+                    formControlName="email"
+                    (blur)="autoSuffixEmail()" />
+                </div>
+                @if (iEmail.errors?.['ujkzEmail'] && iEmail.touched) {
+                  <span class="field-error">L'email doit être en &#64;ujkz.bf</span>
+                } @else if (iEmail.errors?.['email'] && iEmail.touched) {
+                  <span class="field-error">Format email invalide</span>
+                }
+                <span class="field-hint">Inscription réservée aux adresses &#64;ujkz.bf</span>
+              </div>
+
+              <!-- Matricule -->
+              <div class="field-group" [class.field-group--error]="iMatricule.invalid && iMatricule.touched">
+                <label class="field-label">Matricule *</label>
+                <input type="text" class="field-input" formControlName="matricule" placeholder="ENS-001" />
+                @if (iMatricule.invalid && iMatricule.touched) {
+                  <span class="field-error">Requis</span>
+                }
+              </div>
+
+              <!-- Mot de passe -->
+              <div class="field-group" [class.field-group--error]="iMotDePasse.invalid && iMotDePasse.touched">
+                <label class="field-label">Mot de passe *</label>
+                <div class="field-input-wrap">
+                  <svg class="field-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  <input [type]="showInscPwd() ? 'text' : 'password'" class="field-input field-input--pwd"
+                    placeholder="8 caractères minimum" formControlName="motDePasse" />
+                  <button type="button" class="show-btn" (click)="toggleInscPwd()" tabindex="-1">
+                    {{ showInscPwd() ? 'Masquer' : 'Voir' }}
+                  </button>
+                </div>
+                @if (iMotDePasse.errors?.['minlength'] && iMotDePasse.touched) {
+                  <span class="field-error">8 caractères minimum</span>
+                }
+              </div>
+
+              <!-- Infos optionnelles -->
+              <details class="optional-section">
+                <summary class="optional-toggle">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                  Informations académiques (optionnel)
+                </summary>
+                <div class="optional-fields">
+                  <div class="field-row-2">
+                    <div class="field-group">
+                      <label class="field-label">Spécialité</label>
+                      <input type="text" class="field-input" formControlName="specialite" placeholder="Ex : Informatique" />
+                    </div>
+                    <div class="field-group">
+                      <label class="field-label">Grade</label>
+                      <input type="text" class="field-input" formControlName="grade" placeholder="Ex : Maître de conf." />
+                    </div>
+                  </div>
+                  <div class="field-row-2">
+                    <div class="field-group">
+                      <label class="field-label">Département</label>
+                      <input type="text" class="field-input" formControlName="departement" placeholder="Ex : Dept. Info" />
+                    </div>
+                    <div class="field-group">
+                      <label class="field-label">Faculté</label>
+                      <input type="text" class="field-input" formControlName="faculte" placeholder="Ex : FSI" />
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <button type="submit" class="btn-primary btn-full" [disabled]="isLoading()">
+                @if (isLoading()) {
+                  <span class="spinner"></span> Envoi en cours…
+                } @else {
+                  Créer mon compte
+                }
+              </button>
+
+            </form>
           }
-        </button>
-
-      </form>
-
-      <div class="divider"></div>
-
-      <div class="info-card">
-        <div class="info-icon">?</div>
-        <div class="info-body">
-          <strong>Première connexion ?</strong>
-          <p>Veuillez contacter l'administrateur système pour activer votre compte ou récupérer vos accès temporaires.</p>
-          <!-- <a href="mailto:support.it@universite.dz" class="info-mail">support.it@universite.dz</a> -->
         </div>
-      </div>
+      }
 
     </div>
   </section>

@@ -1,0 +1,343 @@
+<div class="pd-page">
+
+  <!-- ══ En-tête ════════════════════════════════════════════ -->
+  <div class="pd-header">
+    <div>
+      <h1 class="pd-title">Espace Présidence</h1>
+      <p class="pd-sub">Gestion des sessions et validation des demandes</p>
+    </div>
+  </div>
+
+  <!-- ══ Session active ═════════════════════════════════════ -->
+  @if (sessionActive(); as s) {
+    <div class="session-banner session-banner--active">
+      <div class="session-banner__icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+      </div>
+      <div class="session-banner__body">
+        <span class="session-badge">Session ouverte</span>
+        <p class="session-info">
+          <strong>Session {{ s.annee }}</strong> — ouverte le {{ s.dateOuverture | date:'dd/MM/yyyy' }}
+          @if (s.ouverteParNom) { · par {{ s.ouverteParNom }} }
+        </p>
+        @if (s.communiqueUrl) {
+          <a [href]="s.communiqueUrl" target="_blank" class="session-communique">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            {{ s.communiqueNomFichier ?? 'Voir le communiqué' }}
+          </a>
+        }
+      </div>
+      @if (roleService.isAdmin()) {
+        <button class="btn-cloturer" (click)="cloturer()">Clôturer</button>
+      }
+    </div>
+  } @else {
+    <div class="session-banner session-banner--none">
+      <div class="session-banner__icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm1-5C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+      </div>
+      <div class="session-banner__body">
+        <span class="session-badge session-badge--none">Aucune session active</span>
+        <p class="session-info">Aucune session n'est actuellement ouverte. Ouvrez-en une pour permettre les dépôts de demandes.</p>
+      </div>
+      <button class="btn-ouvrir" (click)="formOuvert.set(true)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Ouvrir une session
+      </button>
+    </div>
+  }
+
+  <!-- ══ Formulaire ouvrir session ══════════════════════════ -->
+  @if (formOuvert()) {
+    <div class="form-card">
+      <div class="form-card__header">
+        <h2>Ouvrir une nouvelle session</h2>
+        <button class="btn-icon-close" (click)="formOuvert.set(false)">✕</button>
+      </div>
+      @if (erreurSession()) {
+        <div class="alert-error">{{ erreurSession() }}</div>
+      }
+      <div class="form-row">
+        <div class="field-group">
+          <label class="field-label">Année *</label>
+          <input type="number" class="field-input"
+            [min]="2020" [max]="anneeActuelle + 2"
+            [value]="anneeForm()"
+            (input)="anneeForm.set(+$any($event.target).value)" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Date d'ouverture *</label>
+          <input type="date" class="field-input"
+            [value]="dateForm()"
+            (change)="dateForm.set($any($event.target).value)" />
+        </div>
+      </div>
+      <!-- Upload communiqué -->
+      <div class="field-group">
+        <label class="field-label">Communiqué (PDF / image) <span class="opt">optionnel</span></label>
+        <label class="upload-zone" [class.upload-zone--filled]="nomFichier()">
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg" (change)="onFichier($event)" hidden />
+          @if (nomFichier()) {
+            <svg viewBox="0 0 24 24" fill="currentColor" class="upload-ico upload-ico--ok"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>
+            <span>{{ nomFichier() }}</span>
+            <span class="upload-change">Changer</span>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="currentColor" class="upload-ico"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            <span>Cliquez ou glissez un fichier ici</span>
+          }
+        </label>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="formOuvert.set(false)">Annuler</button>
+        <button class="btn-primary" (click)="ouvrirSession()" [disabled]="envoiSession()">
+          @if (envoiSession()) { <span class="spinner"></span> }
+          @else { <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg> }
+          Ouvrir la session
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ══ Stats ══════════════════════════════════════════════ -->
+  <div class="stats-row">
+    <div class="stat-card stat-card--orange">
+      <span class="stat-val">{{ demandesTransmises().length }}</span>
+      <span class="stat-lbl">En attente de décision</span>
+    </div>
+    <div class="stat-card stat-card--green">
+      <span class="stat-val">{{ demandesValidees() }}</span>
+      <span class="stat-lbl">Validées</span>
+    </div>
+    <div class="stat-card stat-card--red">
+      <span class="stat-val">{{ demandesRejetees() }}</span>
+      <span class="stat-lbl">Rejetées</span>
+    </div>
+    <div class="stat-card stat-card--blue">
+      <span class="stat-val">{{ sessions().length }}</span>
+      <span class="stat-lbl">Sessions au total</span>
+    </div>
+  </div>
+
+  <!-- ══ Onglets ════════════════════════════════════════════ -->
+  <div class="tabs">
+    <button class="tab" [class.tab--active]="onglet() === 'validation'" (click)="onglet.set('validation')">
+      Demandes à valider
+      @if (demandesTransmises().length > 0) {
+        <span class="tab-badge">{{ demandesTransmises().length }}</span>
+      }
+    </button>
+    <button class="tab" [class.tab--active]="onglet() === 'sessions'" (click)="onglet.set('sessions')">
+      Historique sessions
+    </button>
+  </div>
+
+  <!-- ══ Tab : Demandes à valider ═══════════════════════════ -->
+  @if (onglet() === 'validation') {
+    @if (demandesTransmises().length === 0) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <p>Aucune demande en attente de décision.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="pd-table">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Enseignant</th>
+              <th>Destination</th>
+              <th>Dates</th>
+              <th>Forfait</th>
+              <th>Instruit par</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of demandesTransmises(); track d.id) {
+              <tr (click)="ouvrirDetail(d)" class="tr-clickable">
+                <td>
+                  <div class="ref-cell">
+                    <span class="ref-code">{{ d.reference }}</span>
+                    <span class="ref-year">{{ d.sessionAnnee }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="ens-cell">
+                    <span class="ens-nom">{{ d.enseignantNom }}</span>
+                    <span class="ens-mat">{{ d.enseignantMatricule }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="dest-cell">
+                    <span class="dest-ville">{{ d.ville }}, {{ d.pays }}</span>
+                    <span class="dest-etab">{{ d.etablissementAccueil }}</span>
+                  </div>
+                </td>
+                <td class="td-dates">
+                  {{ d.dateDepart | date:'dd/MM/yy' }} → {{ d.dateRetour | date:'dd/MM/yy' }}
+                </td>
+                <td class="td-montant">
+                  @if (d.montantForfait) { {{ d.montantForfait | number:'1.0-0' }} FCFA }
+                  @else { <span class="nd">—</span> }
+                </td>
+                <td class="td-dripe">{{ d.instruitParNom ?? '—' }}</td>
+                <td>
+                  <svg viewBox="0 0 24 24" fill="currentColor" class="chevron"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- ══ Tab : Historique sessions ══════════════════════════ -->
+  @if (onglet() === 'sessions') {
+    @if (sessions().length === 0) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+        <p>Aucune session enregistrée.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="pd-table">
+          <thead>
+            <tr>
+              <th>Année</th>
+              <th>Date ouverture</th>
+              <th>Date clôture</th>
+              <th>Ouverte par</th>
+              <th>Communiqué</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of sessions(); track s.id) {
+              <tr>
+                <td><strong>{{ s.annee }}</strong></td>
+                <td>{{ s.dateOuverture | date:'dd/MM/yyyy' }}</td>
+                <td>{{ s.dateCloture ? (s.dateCloture | date:'dd/MM/yyyy') : '—' }}</td>
+                <td>{{ s.ouverteParNom }}</td>
+                <td>
+                  @if (s.communiqueUrl) {
+                    <a [href]="s.communiqueUrl" target="_blank" class="link-doc">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>
+                      Voir
+                    </a>
+                  } @else { <span class="nd">—</span> }
+                </td>
+                <td>
+                  <span class="session-statut" [class.session-statut--ouverte]="s.statut === 'OUVERTE'">
+                    {{ s.statut === 'OUVERTE' ? 'Ouverte' : 'Fermée' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+</div>
+
+<!-- ══ Panneau détail demande ════════════════════════════════ -->
+@if (demandeDetail(); as d) {
+  <div class="panel-backdrop" (click)="fermerDetail()">
+    <div class="panel" (click)="$event.stopPropagation()">
+
+      <div class="panel-header">
+        <div>
+          <span class="statut-badge" [ngClass]="statutCss(d.statut)">{{ statutLabel(d.statut) }}</span>
+          <h2 class="panel-ref">{{ d.reference }}</h2>
+        </div>
+        <button class="btn-icon-close" (click)="fermerDetail()">✕</button>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="detail-section">
+          <p class="detail-label">Enseignant</p>
+          <p class="detail-val">{{ d.enseignantNom }} <span class="detail-mat">{{ d.enseignantMatricule }}</span></p>
+        </div>
+
+        <div class="detail-section">
+          <p class="detail-label">Destination</p>
+          <p class="detail-val">{{ d.ville }}, {{ d.pays }}</p>
+          <p class="detail-sub">{{ d.etablissementAccueil }}</p>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-section">
+            <p class="detail-label">Départ</p>
+            <p class="detail-val">{{ d.dateDepart | date:'dd/MM/yyyy' }}</p>
+          </div>
+          <div class="detail-section">
+            <p class="detail-label">Retour</p>
+            <p class="detail-val">{{ d.dateRetour | date:'dd/MM/yyyy' }}</p>
+          </div>
+          @if (d.montantForfait) {
+            <div class="detail-section">
+              <p class="detail-label">Forfait</p>
+              <p class="detail-val detail-val--green">{{ d.montantForfait | number:'1.0-0' }} FCFA</p>
+            </div>
+          }
+        </div>
+
+        <div class="detail-section">
+          <p class="detail-label">Motif du voyage</p>
+          <p class="detail-motif">{{ d.motifVoyage }}</p>
+        </div>
+
+        @if (d.instruitParNom) {
+          <div class="detail-section detail-section--dripe">
+            <p class="detail-label">Instruit par (DRIPE)</p>
+            <p class="detail-val">{{ d.instruitParNom }}</p>
+          </div>
+        }
+
+        @if (d.lettreInvitationUrl) {
+          <a [href]="d.lettreInvitationUrl" target="_blank" class="link-doc">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>
+            Lettre d'invitation
+          </a>
+        }
+
+        <!-- Dialog rejet inline -->
+        @if (rejetDialog()) {
+          <div class="rejet-block">
+            <label class="field-label">Motif de rejet *</label>
+            <textarea class="field-textarea" rows="3"
+              placeholder="Expliquez la raison du rejet…"
+              [value]="motifRejet()"
+              (input)="motifRejet.set($any($event.target).value)"></textarea>
+            <div class="rejet-actions">
+              <button class="btn-secondary" (click)="rejetDialog.set(false)">Annuler</button>
+              <button class="btn-danger" (click)="confirmerRejet()"
+                [disabled]="actionLoading() || !motifRejet().trim()">
+                @if (actionLoading()) { <span class="spinner spinner--sm"></span> }
+                Confirmer le rejet
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (!rejetDialog()) {
+        <div class="panel-footer">
+          <button class="btn-secondary" (click)="ouvrirRejet()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            Rejeter
+          </button>
+          <button class="btn-valider" (click)="valider(d)" [disabled]="actionLoading()">
+            @if (actionLoading()) { <span class="spinner spinner--sm"></span> }
+            @else { <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> }
+            Valider la demande
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}

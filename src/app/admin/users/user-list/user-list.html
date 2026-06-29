@@ -1,47 +1,189 @@
-<div class="container">
-  <div class="header">
-    <h2>Liste des Utilisateurs</h2>
-    <button class="btn-create" routerLink="/admin/users/create">
-      + Créer un utilisateur
+<div class="ul-page">
+
+  <div class="ul-header">
+    <div>
+      <h1 class="ul-title">Gestion des utilisateurs</h1>
+      <p class="ul-sub">Gérez les comptes, rôles et accès au portail.</p>
+    </div>
+    <a routerLink="/admin/users/create" class="btn-primary">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="btn-icon"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Créer un utilisateur
+    </a>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ stats().total }}</span>
+      <span class="stat-label">Total</span>
+    </div>
+    <div class="stat-card stat-card--green">
+      <span class="stat-value">{{ stats().actifs }}</span>
+      <span class="stat-label">Actifs</span>
+    </div>
+    <div class="stat-card stat-card--red">
+      <span class="stat-value">{{ stats().inactifs }}</span>
+      <span class="stat-label">Inactifs</span>
+    </div>
+    <div class="stat-card stat-card--amber" (click)="setOnglet('attente')" style="cursor:pointer">
+      <span class="stat-value">{{ stats().attente }}</span>
+      <span class="stat-label">En attente</span>
+    </div>
+  </div>
+
+  <div class="ul-tabs">
+    <button class="ul-tab" [class.ul-tab--active]="onglet() === 'tous'" (click)="setOnglet('tous')">
+      Tous les utilisateurs
+    </button>
+    <button class="ul-tab" [class.ul-tab--active]="onglet() === 'attente'" (click)="setOnglet('attente')">
+      En attente
+      @if (stats().attente > 0) {
+        <span class="tab-count">{{ stats().attente }}</span>
+      }
     </button>
   </div>
 
-  <div *ngIf="loading()" class="loading">
-    Chargement en cours...
-  </div>
+  @if (erreur()) {
+    <div class="alert-error">{{ erreur() }}</div>
+  }
 
-  <div *ngIf="erreur()" class="erreur">
-    {{ erreur() }}
-  </div>
+  @if (onglet() === 'tous') {
 
-  <table *ngIf="!loading() && utilisateurs().length > 0">
-    <thead>
-      <tr>
-        <th>Nom</th>
-        <th>Prénom</th>
-        <th>Email</th>
-        <th>Rôle</th>
-        <th>Statut</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let user of utilisateurs()">
-        <td>{{ user.nom }}</td>
-        <td>{{ user.prenom }}</td>
-        <td>{{ user.email }}</td>
-        <td>
-          <span class="badge">{{ user.role }}</span>
-        </td>
-        <td>
-          <span [class]="user.actif ? 'badge-actif' : 'badge-inactif'">
-            {{ user.actif ? 'Actif' : 'Inactif' }}
-          </span>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="search-icon"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" class="search-input" placeholder="Nom, prénom, email, matricule…"
+          [value]="recherche()"
+          (input)="recherche.set($any($event.target).value)" />
+      </div>
+      <select class="filter-select" [value]="filtreRole()" (change)="filtreRole.set($any($event.target).value)">
+        <option value="">Tous les rôles</option>
+        @for (r of roles; track r) {
+          <option [value]="r">{{ labelRole(r) }}</option>
+        }
+      </select>
+    </div>
 
-  <div *ngIf="!loading() && utilisateurs().length === 0" class="vide">
-    Aucun utilisateur trouvé.
-  </div>
+    @if (loading()) {
+      <div class="loading-state">
+        <span class="spinner"></span> Chargement…
+      </div>
+    } @else if (filtres().length === 0) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+        <p>Aucun utilisateur trouvé.</p>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="ul-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Matricule</th>
+              <th>Rôle</th>
+              <th>Statut</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of filtres(); track u.id) {
+              <tr>
+                <!-- Avatar + nom -->
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar" [ngClass]="couleurRole(u.role)">{{ initiales(u) }}</div>
+                    <div>
+                      <div class="user-name">{{ u.prenom }} {{ u.nom }}</div>
+                      <div class="user-email">{{ u.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="td-mono">{{ u.matricule }}</td>
+                <td>
+                  <span class="role-badge" [ngClass]="couleurRole(u.role)">{{ labelRole(u.role) }}</span>
+                </td>
+                <td>
+                  <span class="status-badge" [class.status-badge--actif]="u.actif" [class.status-badge--inactif]="!u.actif">
+                    {{ u.actif ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                <td class="td-actions">
+                  @if (actionEnCours() === u.id) {
+                    <span class="spinner spinner--sm"></span>
+                  } @else if (u.actif) {
+                    <button class="btn-action btn-action--danger" (click)="desactiver(u)" title="Désactiver">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                      Désactiver
+                    </button>
+                  } @else {
+                    <button class="btn-action btn-action--success" (click)="activer(u)" title="Activer">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg>
+                      Activer
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  @if (onglet() === 'attente') {
+    @if (loadingAttente()) {
+      <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+    } @else if (enAttente().length === 0) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-.5-13H13v6l5.25 3.15-.75 1.23L11.5 16V7z"/></svg>
+        <p>Aucun compte en attente de validation.</p>
+      </div>
+    } @else {
+      <div class="attente-info">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        Ces enseignants ont créé un compte via le portail et attendent votre validation.
+      </div>
+      <div class="table-wrap">
+        <table class="ul-table">
+          <thead>
+            <tr>
+              <th>Enseignant</th>
+              <th>Matricule</th>
+              <th>Département</th>
+              <th>Grade</th>
+              <th class="th-actions">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of enAttente(); track u.id) {
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar role--enseignant">{{ initiales(u) }}</div>
+                    <div>
+                      <div class="user-name">{{ u.prenom }} {{ u.nom }}</div>
+                      <div class="user-email">{{ u.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="td-mono">{{ u.matricule }}</td>
+                <td class="td-secondary">{{ u.departement ?? '—' }}</td>
+                <td class="td-secondary">{{ u.grade ?? '—' }}</td>
+                <td class="td-actions">
+                  @if (actionEnCours() === u.id) {
+                    <span class="spinner spinner--sm"></span>
+                  } @else {
+                    <button class="btn-action btn-action--success" (click)="activer(u)">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z"/></svg>
+                      Valider
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
 </div>

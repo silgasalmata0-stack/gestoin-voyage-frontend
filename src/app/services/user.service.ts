@@ -38,4 +38,12 @@ export class UserService {
   supprimerUtilisateur(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
+
+  activerUtilisateur(id: number): Observable<any> {
+    return this.http.put<any>(`${this.base}/${id}/activer`, {});
+  }
+
+  getEnAttente(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/en-attente`);
+  }
 }

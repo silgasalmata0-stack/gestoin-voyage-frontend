@@ -26,15 +26,10 @@
       <span class="section-label">Administration</span>
     }
 
-    @for (item of menuItems; track item.label) {
+    @for (item of menuItems(); track item.label) {
       <div class="nav-item">
-
-        <button
-          class="nav-btn"
-          [class.active]="isExpanded(item.label)"
-          [title]="item.label"
-          (click)="toggleItem(item.label)"
-        >
+        <button class="nav-btn" [class.active]="isExpanded(item.label)"
+          [title]="item.label" (click)="toggleItem(item.label)">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
             <path [attr.d]="item.iconPath" />
           </svg>
@@ -57,9 +52,35 @@
             }
           </ul>
         }
-
       </div>
     }
   </nav>
+
+  <!-- Footer : profil + déconnexion -->
+  <div class="sidebar-footer">
+    <div class="user-row" [class.user-row--collapsed]="isCollapsed()">
+      <div class="user-avatar" [title]="nomAffiche()">{{ initiales() }}</div>
+      @if (!isCollapsed()) {
+        <div class="user-details">
+          <span class="user-nom">{{ nomAffiche() }}</span>
+          <span class="user-role">{{ roleLabel() }}</span>
+        </div>
+      }
+    </div>
+
+    <button class="btn-logout" (click)="logout()" [disabled]="loggingOut()"
+      [title]="isCollapsed() ? 'Se déconnecter' : ''">
+      @if (loggingOut()) {
+        <span class="spinner-logout"></span>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+        </svg>
+      }
+      @if (!isCollapsed()) {
+        <span>Se déconnecter</span>
+      }
+    </button>
+  </div>
 
 </aside>

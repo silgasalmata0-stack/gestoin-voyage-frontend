@@ -1,0 +1,225 @@
+<div class="dl-page">
+
+  <!-- En-tête -->
+  <div class="dl-header">
+    <div>
+      <h1 class="dl-title">{{ mode === 'my' ? 'Mes demandes' : 'Toutes les demandes' }}</h1>
+      <p class="dl-sub">{{ totalElements() }} demande(s) au total</p>
+    </div>
+    @if (roleService.isEnseignant()) {
+      <a routerLink="/admin/demandes/create" class="btn-primary">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="btn-icon"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Nouvelle demande
+      </a>
+    }
+  </div>
+
+  <!-- Erreur -->
+  @if (erreur()) {
+    <div class="alert-error">{{ erreur() }}</div>
+  }
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="currentColor" class="search-icon"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" class="search-input" placeholder="Référence, enseignant, destination…"
+        [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
+    </div>
+    <select class="filter-select" [value]="filtreStatut()" (change)="filtreStatut.set($any($event.target).value)">
+      <option value="">Tous les statuts</option>
+      @for (s of statutsOptions; track s) {
+        <option [value]="s">{{ statutLabel(s) }}</option>
+      }
+    </select>
+    <button class="btn-refresh" (click)="charger(page())" title="Actualiser">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+    </button>
+  </div>
+
+  <!-- Tableau -->
+  @if (loading()) {
+    <div class="loading-state"><span class="spinner"></span> Chargement…</div>
+  } @else if (filtrees().length === 0) {
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+      <p>Aucune demande trouvée.</p>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="dl-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            @if (mode === 'all') { <th>Enseignant</th> }
+            <th>Destination</th>
+            <th>Dates</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th class="th-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of filtrees(); track d.id) {
+            <tr>
+              <td>
+                <div class="ref-cell">
+                  <span class="ref-code">{{ d.reference }}</span>
+                  <span class="ref-year">Session {{ d.sessionAnnee }}</span>
+                </div>
+              </td>
+              @if (mode === 'all') {
+                <td>
+                  <div class="ens-cell">
+                    <span class="ens-nom">{{ d.enseignantNom }}</span>
+                    <span class="ens-mat">{{ d.enseignantMatricule }}</span>
+                  </div>
+                </td>
+              }
+              <td>
+                <div class="dest-cell">
+                  <span class="dest-ville">{{ d.ville }}, {{ d.pays }}</span>
+                  <span class="dest-etab">{{ d.etablissementAccueil }}</span>
+                </div>
+              </td>
+              <td class="td-dates">
+                <span>{{ d.dateDepart | date:'dd/MM/yy' }}</span>
+                <span class="date-sep">→</span>
+                <span>{{ d.dateRetour | date:'dd/MM/yy' }}</span>
+              </td>
+              <td class="td-montant">
+                @if (d.montantForfait) {
+                  {{ d.montantForfait | number:'1.0-0' }} FCFA
+                } @else {
+                  <span class="nd">—</span>
+                }
+              </td>
+              <td>
+                <span class="statut-badge" [ngClass]="statutCss(d.statut)">
+                  {{ statutLabel(d.statut) }}
+                </span>
+              </td>
+              <td class="td-actions">
+                <div class="actions-wrap">
+                  <!-- DRIPE -->
+                  @if (peutInstruire(d)) {
+                    <button class="btn-act btn-act--blue" (click)="ouvrirInstruire(d)" title="Instruire">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      Instruire
+                    </button>
+                  }
+                  @if (peutTransmettre(d)) {
+                    <button class="btn-act btn-act--indigo" (click)="transmettre(d)" title="Transmettre">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                      Transmettre
+                    </button>
+                  }
+                  @if (peutRejeterDripe(d) || peutRejeterPresidence(d)) {
+                    <button class="btn-act btn-act--red" (click)="ouvrirRejet(d)" title="Rejeter">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                      Rejeter
+                    </button>
+                  }
+
+                  <!-- PRESIDENCE -->
+                  @if (peutValider(d)) {
+                    <button class="btn-act btn-act--green" (click)="valider(d)" title="Valider">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                      Valider
+                    </button>
+                  }
+
+                  <!-- ENSEIGNANT -->
+                  @if (peutAnnuler(d)) {
+                    <button class="btn-act btn-act--orange" (click)="annuler(d)" title="Annuler">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                      Annuler
+                    </button>
+                  }
+
+                  <!-- Si aucune action -->
+                  @if (!peutInstruire(d) && !peutTransmettre(d) && !peutRejeterDripe(d) &&
+                       !peutRejeterPresidence(d) && !peutValider(d) && !peutAnnuler(d)) {
+                    <span class="no-action">—</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button class="page-btn" (click)="pagePrecedente()" [disabled]="page() === 0">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <span class="page-info">Page {{ page() + 1 }} / {{ totalPages() }}</span>
+        <button class="page-btn" (click)="pageSuivante()" [disabled]="page() >= totalPages() - 1">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+      </div>
+    }
+  }
+
+  <!-- ═══ Dialog : Instruire ═══ -->
+  @if (instruireDialog()) {
+    <div class="modal-backdrop" (click)="instruireDialog.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Instruire la demande</h3>
+          <button class="modal-close" (click)="instruireDialog.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">Vous pouvez ajouter des observations (optionnel) avant d'instruire.</p>
+          <div class="field-group">
+            <label class="field-label">Observations</label>
+            <textarea class="field-textarea" rows="4"
+              placeholder="Observations DRIPE…"
+              [value]="observations()"
+              (input)="observations.set($any($event.target).value)"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="instruireDialog.set(false)">Annuler</button>
+          <button class="btn-primary" (click)="confirmerInstruire()" [disabled]="actionLoading()">
+            @if (actionLoading()) { <span class="spinner spinner--sm"></span> }
+            Confirmer l'instruction
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ═══ Dialog : Rejeter ═══ -->
+  @if (rejetDialog()) {
+    <div class="modal-backdrop" (click)="rejetDialog.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header modal-header--danger">
+          <h3>Rejeter la demande</h3>
+          <button class="modal-close" (click)="rejetDialog.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="field-group">
+            <label class="field-label">Motif de rejet *</label>
+            <textarea class="field-textarea" rows="4"
+              placeholder="Expliquez la raison du rejet…"
+              [value]="motifRejet()"
+              (input)="motifRejet.set($any($event.target).value)"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="rejetDialog.set(false)">Annuler</button>
+          <button class="btn-danger" (click)="confirmerRejet()"
+            [disabled]="actionLoading() || !motifRejet().trim()">
+            @if (actionLoading()) { <span class="spinner spinner--sm"></span> }
+            Confirmer le rejet
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

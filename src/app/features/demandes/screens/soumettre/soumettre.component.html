@@ -1,0 +1,236 @@
+<div class="sm-page">
+
+  <!-- ══ SUCCÈS ══════════════════════════════════════════════ -->
+  @if (succes()) {
+    <div class="success-card">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <h2>Demande soumise !</h2>
+      <p>Votre demande a été transmise à la DRIPE pour instruction.</p>
+      <button class="btn-primary" (click)="retourListe()">Voir mes demandes</button>
+    </div>
+
+  } @else {
+
+    <!-- En-tête -->
+    <div class="sm-header">
+      <button class="btn-back" (click)="retourListe()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Mes demandes
+      </button>
+      <h1 class="sm-title">Nouvelle demande de voyage</h1>
+      <p class="sm-sub">Complétez les informations ci-dessous pour soumettre votre demande.</p>
+    </div>
+
+    @if (erreur()) {
+      <div class="alert-error">{{ erreur() }}</div>
+    }
+
+    <form class="sm-form" (ngSubmit)="soumettre()">
+
+      <!-- ── Section Destination ─────────────────────────── -->
+      <div class="form-section">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Destination
+        </div>
+
+        <!-- Barre de recherche université -->
+        @if (!universiteChoisie()) {
+          <div class="search-block">
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="search-ico">
+                <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
+              <input #searchInput type="text" class="search-input"
+                placeholder="Rechercher une université partenaire…"
+                [value]="rechercheTexte()"
+                (input)="onRechercheInput($any($event.target).value)"
+                (blur)="fermerDropdown()"
+                autocomplete="off" />
+            </div>
+            @if (!chargementRef() && totalUniversites() > 0) {
+              <p class="search-hint">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                {{ totalUniversites() }} universités partenaires disponibles
+              </p>
+            }
+
+            <!-- Dropdown résultats -->
+            @if (dropdownOuvert() && resultatsRecherche().length > 0) {
+              <div class="dropdown">
+                @for (u of resultatsRecherche(); track u.id) {
+                  <button type="button" class="dropdown-item" (mousedown)="selectionnerUniversite(u)">
+                    <div class="univ-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.35V17H7v2h10v-2h-2v-3.65l4.5-2.45.5-.27V17h2v-5.82L23 9 12 3zm0 2.35L20.04 9 12 12.65 3.96 9 12 5.35z"/></svg>
+                    </div>
+                    <div class="univ-info">
+                      <span class="univ-nom">{{ u.nom }}</span>
+                      <span class="univ-lieu">{{ u.ville }} · {{ u.paysNom }} · {{ u.continentNom }}</span>
+                    </div>
+                    @if (u.montantForfait) {
+                      <span class="univ-forfait">{{ u.montantForfait | number:'1.0-0' }} FCFA</span>
+                    }
+                  </button>
+                }
+              </div>
+            }
+            @if (dropdownOuvert() && rechercheTexte().length >= 2 && resultatsRecherche().length === 0) {
+              <div class="dropdown dropdown--empty">
+                Aucune université trouvée pour "{{ rechercheTexte() }}"
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Chip université sélectionnée -->
+        @if (universiteChoisie(); as u) {
+          <div class="univ-chip">
+            <div class="chip-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18V17h2v-4.82L9 13.35V17H7v2h10v-2h-2v-3.65l4.5-2.45.5-.27V17h2v-5.82L23 9 12 3zm0 2.35L20.04 9 12 12.65 3.96 9 12 5.35z"/></svg>
+            </div>
+            <div class="chip-body">
+              <span class="chip-nom">{{ u.nom }}</span>
+              <span class="chip-lieu">{{ u.ville }} · {{ u.paysNom }} · {{ u.continentNom }}</span>
+              @if (u.montantForfait) {
+                <span class="chip-forfait">Forfait : {{ u.montantForfait | number:'1.0-0' }} FCFA</span>
+              }
+            </div>
+            <button type="button" class="chip-close" (click)="effacerUniversite()" title="Changer d'université">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+          </div>
+        }
+
+        <!-- Champs destination -->
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
+              Pays de destination *
+            </label>
+            <input type="text" class="field-input"
+              placeholder="Ex: France"
+              [value]="pays()"
+              (input)="pays.set($any($event.target).value)" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 11V5l-3-3-3 3v2H3v14h18V11h-6zm-8 8H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm6 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm6 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/></svg>
+              Ville *
+            </label>
+            <input type="text" class="field-input"
+              placeholder="Ex: Paris"
+              [value]="ville()"
+              (input)="ville.set($any($event.target).value)" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+            Établissement d'accueil *
+          </label>
+          <input type="text" class="field-input"
+            placeholder="Ex: Université Paris-Sorbonne"
+            [value]="etablissement()"
+            (input)="etablissement.set($any($event.target).value)" />
+        </div>
+
+        <!-- Région libre — uniquement si pas d'université sélectionnée -->
+        @if (!universiteChoisie()) {
+          <div class="field-group">
+            <label class="field-label field-label--opt">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.66 8L12 2.35 6.34 8C4.78 9.56 4 11.64 4 13.64s.78 4.11 2.34 5.67 3.61 2.35 5.66 2.35 4.1-.79 5.66-2.35S20 15.64 20 13.64 19.22 9.56 17.66 8z"/></svg>
+              Région (optionnel — si hors catalogue)
+              <span class="opt-tag">optionnel</span>
+            </label>
+            <input type="text" class="field-input"
+              placeholder="Ex: Afrique subsaharienne…"
+              [value]="regionNomLibre()"
+              (input)="regionNomLibre.set($any($event.target).value)" />
+          </div>
+        }
+      </div>
+
+      <!-- ── Section Motif ───────────────────────────────── -->
+      <div class="form-section">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          Motif du voyage
+        </div>
+        <div class="field-group">
+          <label class="field-label">Motif du voyage *</label>
+          <textarea class="field-textarea" rows="4"
+            placeholder="Décrivez l'objet et les objectifs de ce voyage académique…"
+            [value]="motif()"
+            (input)="motif.set($any($event.target).value)"></textarea>
+        </div>
+      </div>
+
+      <!-- ── Section Dates ───────────────────────────────── -->
+      <div class="form-section">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+          Dates
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Date départ *</label>
+            <input type="date" class="field-input"
+              [min]="tomorrowStr"
+              [value]="dateDepart()"
+              (change)="dateDepart.set($any($event.target).value)" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">Date retour *</label>
+            <input type="date" class="field-input"
+              [min]="dateDepart() || todayStr"
+              [value]="dateRetour()"
+              (change)="dateRetour.set($any($event.target).value)" />
+          </div>
+        </div>
+        @if (dateDepart() && dateDepart() <= todayStr) {
+          <p class="field-error">La date de départ doit être au minimum demain.</p>
+        }
+        @if (dateRetour() && dateDepart() && dateRetour() <= dateDepart()) {
+          <p class="field-error">La date de retour doit être après la date de départ.</p>
+        }
+      </div>
+
+      <!-- ── Section Lettre ──────────────────────────────── -->
+      <div class="form-section form-section--opt">
+        <div class="section-header">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          Lettre d'invitation
+          <span class="opt-tag">optionnel</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label">URL de la lettre</label>
+          <input type="url" class="field-input"
+            placeholder="https://… (Google Drive, Dropbox…)"
+            [value]="lettreUrl()"
+            (input)="lettreUrl.set($any($event.target).value)" />
+          <span class="field-hint">Partagez un lien accessible vers le document.</span>
+        </div>
+      </div>
+
+      <!-- ── Boutons ─────────────────────────────────────── -->
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="retourListe()">Annuler</button>
+        <button type="submit" class="btn-primary"
+          [disabled]="!formulaireValide() || soumission()">
+          @if (soumission()) {
+            <span class="spinner"></span>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          }
+          Soumettre la demande
+        </button>
+      </div>
+
+    </form>
+  }
+
+</div>

@@ -1,123 +1,172 @@
-import { Component, signal } from '@angular/core';
-import { RouterModule } from '@angular/router'; // Import requis pour routerLink
+import { Component, inject, signal, computed } from '@angular/core';
+import { RouterModule, Router } from '@angular/router';
+import { RoleService, ROLES } from '../../../core/role.service';
+import { TokenStorage } from '../../../features/auth/infrastructure/token.storage';
+import { AuthRepository } from '../../../features/auth/domain/auth.repository';
 
-interface SubItem {
-  label: string;
-  link: string; // Ajout de la propriété link
-}
+interface SubItem  { label: string; link: string; }
+interface MenuItem { label: string; iconPath: string; roles: string[]; children: SubItem[]; }
 
-interface MenuItem {
-  label: string;
-  iconPath: string;
-  children: SubItem[];
-}
+const ALL_ROLES = Object.values(ROLES);
+
+const ROLE_LABELS: Record<string, string> = {
+  ROLE_ADMIN:      'Administrateur',
+  ROLE_PRESIDENCE: 'Présidence',
+  ROLE_DRIPE:      'Agent DRIPE',
+  ROLE_FINANCIER:  'Agent Financier',
+  ROLE_ENSEIGNANT: 'Enseignant-Chercheur',
+};
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterModule], // Import du module de routage
+  imports: [RouterModule],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
 })
 export class SidebarComponent {
-  isCollapsed = signal(false);
-  expandedItem = signal<string | null>(null);
+  private roleService = inject(RoleService);
+  private storage     = inject(TokenStorage);
+  private authRepo    = inject(AuthRepository);
+  private router      = inject(Router);
 
-  readonly menuItems: MenuItem[] = [
+  isCollapsed  = signal(false);
+  expandedItem = signal<string | null>(null);
+  loggingOut   = signal(false);
+
+  readonly nomAffiche = computed(() => {
+    const prenom = this.storage.getPrenom();
+    const nom    = this.storage.getNom();
+    if (prenom || nom) return `${prenom ?? ''} ${nom ?? ''}`.trim();
+    return ROLE_LABELS[this.storage.getRole() ?? ''] ?? '';
+  });
+
+  readonly roleLabel = computed(() =>
+    ROLE_LABELS[this.storage.getRole() ?? ''] ?? ''
+  );
+
+  readonly initiales = computed(() => {
+    const p = this.storage.getPrenom() ?? '';
+    const n = this.storage.getNom() ?? '';
+    return ((p[0] ?? '') + (n[0] ?? '')).toUpperCase() || '?';
+  });
+
+  private readonly allMenuItems: MenuItem[] = [
     {
       label: 'Utilisateurs',
       iconPath: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
+      roles: [ROLES.ADMIN],
       children: [
-        { label: 'Créer un utilisateur', link: '/admin/users/create' },
+        { label: 'Créer un utilisateur',    link: '/admin/users/create' },
         { label: 'Lister les utilisateurs', link: '/admin/users' },
-      ],
-    },
-    {
-      label: 'Sessions',
-      iconPath: 'M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z',
-      children: [
-        { label: 'Ouvrir une session', link: '/admin/sessions/open' },
-        { label: 'Session active', link: '/admin/sessions/active' },
-        { label: 'Lister les sessions', link: '/admin/sessions' },
-        { label: 'Clôturer la session', link: '/admin/sessions/close' },
-      ],
-    },
-    {
-      label: 'Zones & Tarifs',
-      iconPath: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-      children: [
-        { label: 'Lister les zones', link: '/admin/zones' },
-        { label: 'Créer une zone', link: '/admin/zones/create' },
-      ],
-    },
-    {
-      label: 'Demandes',
-      iconPath: 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
-      children: [
-        { label: 'Soumettre une demande', link: '/admin/demandes/create' },
-        { label: 'Mes demandes', link: '/admin/demandes/my' },
-        { label: 'Toutes les demandes', link: '/admin/demandes' },
-      ],
-    },
-    {
-      label: 'Budget',
-      iconPath: 'M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z',
-      children: [
-        { label: 'Consulter le budget', link: '/admin/budget/view' },
-        { label: 'Initialiser le budget', link: '/admin/budget/init' },
-        { label: "Verser l'acompte (90%)", link: '/admin/budget/acompte' },
-        { label: 'Verser le solde (10%)', link: '/admin/budget/solde' },
-      ],
-    },
-    {
-      label: 'Justificatifs',
-      iconPath: 'M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z',
-      children: [
-        { label: 'Lister les justificatifs', link: '/admin/justificatifs' },
-        { label: 'Déposer un justificatif', link: '/admin/justificatifs/upload' },
-      ],
-    },
-    {
-      label: 'Reports',
-      iconPath: 'M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z',
-      children: [
-        { label: 'Demander un report', link: '/admin/reports/create' },
-        { label: 'Reports en attente', link: '/admin/reports/pending' },
-        { label: 'Mes reports', link: '/admin/reports/my' },
-      ],
-    },
-    {
-      label: 'Notifications',
-      iconPath: 'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z',
-      children: [
-        { label: 'Mes notifications', link: '/admin/notifications/my' },
-        { label: 'Marquer toutes comme lues', link: '/admin/notifications/read' },
       ],
     },
     {
       label: 'Journal',
       iconPath: 'M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z',
+      roles: [ROLES.ADMIN],
       children: [
         { label: 'Toutes les activités', link: '/admin/journal' },
-        { label: 'Par période', link: '/admin/journal/period' },
-        { label: 'Par action', link: '/admin/journal/action' },
+        { label: 'Par période',          link: '/admin/journal/period' },
+        { label: 'Par action',           link: '/admin/journal/action' },
+      ],
+    },
+    {
+      label: 'Sessions',
+      iconPath: 'M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z',
+      roles: [ROLES.ADMIN, ROLES.PRESIDENCE],
+      children: [
+        { label: 'Tableau de bord',     link: '/admin/sessions' },
+        { label: 'Session active',      link: '/admin/sessions/active' },
+        { label: 'Clôturer la session', link: '/admin/sessions/close' },
+      ],
+    },
+    {
+      label: 'Demandes',
+      iconPath: 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
+      roles: ALL_ROLES,
+      children: [
+        { label: 'Toutes les demandes',   link: '/admin/demandes' },
+        { label: 'Mes demandes',          link: '/admin/demandes/my' },
+        { label: 'Soumettre une demande', link: '/admin/demandes/create' },
+      ],
+    },
+    {
+      label: 'Budget',
+      iconPath: 'M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z',
+      roles: [ROLES.ADMIN, ROLES.FINANCIER],
+      children: [
+        { label: 'Consulter le budget',    link: '/admin/budget/view' },
+        { label: 'Initialiser le budget',  link: '/admin/budget/init' },
+        { label: "Verser l'acompte (90%)", link: '/admin/budget/acompte' },
+        { label: 'Verser le solde (10%)',  link: '/admin/budget/solde' },
+      ],
+    },
+    {
+      label: 'Zones & Tarifs',
+      iconPath: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+      roles: [ROLES.ADMIN, ROLES.FINANCIER],
+      children: [
+        { label: 'Lister les zones', link: '/admin/zones' },
+        { label: 'Créer une zone',   link: '/admin/zones/create' },
+      ],
+    },
+    {
+      label: 'Justificatifs',
+      iconPath: 'M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z',
+      roles: [ROLES.ADMIN, ROLES.FINANCIER, ROLES.ENSEIGNANT],
+      children: [
+        { label: 'Lister les justificatifs', link: '/admin/justificatifs' },
+        { label: 'Déposer un justificatif',  link: '/admin/justificatifs/upload' },
+      ],
+    },
+    {
+      label: 'Reports',
+      iconPath: 'M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z',
+      roles: [ROLES.ADMIN, ROLES.DRIPE, ROLES.ENSEIGNANT],
+      children: [
+        { label: 'Demander un report', link: '/admin/reports/create' },
+        { label: 'Reports en attente', link: '/admin/reports/pending' },
+        { label: 'Mes reports',        link: '/admin/reports/my' },
+      ],
+    },
+    {
+      label: 'Notifications',
+      iconPath: 'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z',
+      roles: ALL_ROLES,
+      children: [
+        { label: 'Mes notifications',         link: '/admin/notifications/my' },
+        { label: 'Marquer toutes comme lues', link: '/admin/notifications/read' },
       ],
     },
   ];
 
+  readonly menuItems = computed(() => {
+    const role = this.roleService.getRole() ?? '';
+    return this.allMenuItems.filter(item => item.roles.includes(role));
+  });
+
   toggleCollapse(): void {
-    this.isCollapsed.update((v) => !v);
-    if (this.isCollapsed()) {
-      this.expandedItem.set(null);
-    }
+    this.isCollapsed.update(v => !v);
+    if (this.isCollapsed()) this.expandedItem.set(null);
   }
 
   toggleItem(label: string): void {
     if (this.isCollapsed()) return;
-    this.expandedItem.update((cur) => (cur === label ? null : label));
+    this.expandedItem.update(cur => cur === label ? null : label);
   }
 
-  isExpanded(label: string): boolean {
-    return this.expandedItem() === label;
+  isExpanded(label: string): boolean { return this.expandedItem() === label; }
+
+  logout(): void {
+    this.loggingOut.set(true);
+    this.authRepo.logout().subscribe({
+      next:  () => this.router.navigate(['/login']),
+      error: () => {
+        // erreur API → on vide quand même et on redirige
+        this.storage.clear();
+        this.router.navigate(['/login']);
+      },
+    });
   }
 }

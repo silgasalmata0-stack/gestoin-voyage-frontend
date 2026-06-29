@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { AuthRepository } from '../domain/auth.repository';
-import { AuthResult, AuthTokens, AuthUser, LoginCredentials } from '../domain/auth-user.model';
+import { AuthResult, AuthTokens, AuthUser, LoginCredentials, InscriptionRequest } from '../domain/auth-user.model';
 import { TokenStorage } from './token.storage';
 
 interface AuthApiResponse {
@@ -27,8 +27,12 @@ export class AuthHttpRepository extends AuthRepository {
       .post<AuthApiResponse>(`${this.apiUrl}/login`, credentials)
       .pipe(
         map((res) => this.toAuthResult(res)),
-        tap((result) => this.storage.store(result.tokens, result.user.role)),
+        tap((result) => this.storage.store(result.tokens, result.user.role, result.user.nom, result.user.prenom)),
       );
+  }
+
+  inscrire(request: InscriptionRequest): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/inscription`, request);
   }
 
   logout(): Observable<void> {
