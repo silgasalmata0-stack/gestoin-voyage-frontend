@@ -1,18 +1,12 @@
 {
   "/api": {
-    "target": "https://gestionvoyage.onrender.com",
+    "target": "http://localhost:8080",
     "secure": false,
-    "changeOrigin": true,
-    "headers": {
-      "Origin": "https://gestionvoyage.onrender.com"
-    }
+    "changeOrigin": true
   },
   "/health": {
-    "target": "https://gestionvoyage.onrender.com",
+    "target": "http://localhost:8080",
     "secure": false,
-    "changeOrigin": true,
-    "headers": {
-      "Origin": "https://gestionvoyage.onrender.com"
-    }
+    "changeOrigin": true
   }
 }

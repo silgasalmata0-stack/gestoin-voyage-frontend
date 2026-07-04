@@ -1,6 +1,5 @@
 <div class="pd-page">
 
-  <!-- ══ En-tête ════════════════════════════════════════════ -->
   <div class="pd-header">
     <div>
       <h1 class="pd-title">Espace Présidence</h1>
@@ -8,7 +7,6 @@
     </div>
   </div>
 
-  <!-- ══ Session active ═════════════════════════════════════ -->
   @if (sessionActive(); as s) {
     <div class="session-banner session-banner--active">
       <div class="session-banner__icon">
@@ -17,7 +15,7 @@
       <div class="session-banner__body">
         <span class="session-badge">Session ouverte</span>
         <p class="session-info">
-          <strong>Session {{ s.annee }}</strong> — ouverte le {{ s.dateOuverture | date:'dd/MM/yyyy' }}
+          <strong>Session {{ s.annee }}</strong>  ouverte le {{ s.dateOuverture | date:'dd/MM/yyyy' }}
           @if (s.ouverteParNom) { · par {{ s.ouverteParNom }} }
         </p>
         @if (s.communiqueUrl) {
